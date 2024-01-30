@@ -1,0 +1,28 @@
+[yaml1]
+- serverConfig:
+    - srv-100:
+        settings: [fast, secure]
+    - srv-200:
+        settings: [reliable, scalable]
+        backup_to: storageUnit
+- database:
+    - srv-300
+- webApp
+
+[yaml2]
+apiVersion: v1
+kind: Pod
+metadata:
+ name: apache-pod
+ labels:
+   app: web
+
+[yaml3]
+...
+jobs:
+  blueberry:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+...

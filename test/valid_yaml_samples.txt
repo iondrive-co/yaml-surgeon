@@ -16,13 +16,18 @@ metadata:
  name: apache-pod
  labels:
    app: web
+   steps:
+     - uses: actions/checkout@v2
+     - name: Set up Python
+...
 
 [yaml3]
 ...
-jobs:
-  blueberry:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-...
+# Document start
+kind: Pod # Comment at line end
+metadata:
+  # A comment line
+  build: "2020-01-01"
+  resources:
+    # Nothing here but a comment
+  emptyLabel: {}

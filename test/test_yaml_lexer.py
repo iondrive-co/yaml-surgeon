@@ -12,7 +12,7 @@ class TestLexYaml(unittest.TestCase):
         samples = text.split('[yaml')
         return {f"yaml{i}": sample.split(']', 1)[1].strip() for i, sample in enumerate(samples) if sample.strip()}
 
-    def test_yaml1(self):
+    def test_lex_valid_list_nested_dict(self):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml1"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
@@ -28,7 +28,7 @@ class TestLexYaml(unittest.TestCase):
         ]
         self.assertEqual(expected, parsed_yaml)
 
-    def test_yaml2(self):
+    def test_lex_valid_dict_nested_list(self):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml2"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
@@ -37,22 +37,27 @@ class TestLexYaml(unittest.TestCase):
             Line("metadata:", 3, 0),
             Line(" name: apache-pod", 4, 1),
             Line(" labels:", 5, 1),
-            Line("   app: web", 6, 2)
+            Line("   app: web", 6, 2),
+            Line("   steps:", 7, 2),
+            Line("     - uses: actions/checkout@v2", 8, 3),
+            Line("     - name: Set up Python", 9, 3),
+            Line("...", 10, 0)
         ]
         self.assertEqual(expected, parsed_yaml)
 
-    def test_yaml3(self):
+    def test_lex_valid_awkward_comments_and_spaces(self):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml3"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
             Line("...", 1, 0),
-            Line("jobs:", 2, 0),
-            Line("  blueberry:", 3, 1),
-            Line("    runs-on: ubuntu-latest", 4, 2),
-            Line("    steps:", 5, 2),
-            Line("    - uses: actions/checkout@v2", 6, 2),
-            Line("    - name: Set up Python", 7, 2),
-            Line("...", 8, 0)
+            Line("# Document start", 2, 0),
+            Line("kind: Pod # Comment at line end", 3, 0),
+            Line("metadata:", 4, 0),
+            Line("  # A comment line", 5, 1),
+            Line("  build: \"2020-01-01\"", 6, 1),
+            Line("  resources:", 7, 1),
+            Line("    # Nothing here but a comment", 8, 2),
+            Line("  emptyLabel: {}", 9, 1)
         ]
         self.assertEqual(expected, parsed_yaml)
 

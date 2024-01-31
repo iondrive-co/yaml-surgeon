@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 class Line:
     def __init__(self, text, line_number, level):
         self.text = text
@@ -24,9 +27,12 @@ class Line:
 
 
 class Token:
-    def __init__(self, type, value, parent):
+    def __init__(self, type, value):
         self.type = type
         self.value = value
+        self.parent = None
+
+    def set_parent(self, parent):
         self.parent = parent
 
     def __eq__(self, other):
@@ -40,3 +46,10 @@ class Token:
         return f"Token(type='{self.type}', " \
                f"value={self.value}', " \
                f"parent={self.parent})"
+
+
+class TokenType(Enum):
+    METADATA = 1
+    LIST = 2
+    DICTIONARY = 3
+    SCALAR = 4

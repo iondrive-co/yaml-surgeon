@@ -1,30 +1,32 @@
-from structures import YamlLine
+from structures import Line
 
 
 def scan_text(text):
     """
-    Build a list of YamlLines from the specified text, calculating the indentation level.
+    Build an ordered list of Line objects from the specified text, including calculating the nesting level
+    of each line. We preserve all data including spaces as we don't want to make any unnecessary modifications
     """
-    lines = text.strip().split("\n")
+    lines = text.splitlines()
+    if not lines:
+        return []
     yaml_lines = []
-    previous_indent = 0
+    nesting_level = 0
+    previous_indent = len(lines[0]) - len(lines[0].lstrip())
+    block_indent_amount = 2
     for line_number, line in enumerate(lines):
         current_indent = len(line) - len(line.lstrip())
-
-        if line.strip() == "":
-            # Skip empty lines for level calculation
-            level = 0
-        elif current_indent > previous_indent:
-            level = yaml_lines[-1].level + 1 if yaml_lines else 0
+        if current_indent > previous_indent:
+            block_indent_amount = current_indent - previous_indent
+            nesting_level += 1
         elif current_indent < previous_indent:
-            # Find a line with matching or lesser indent to determine level
-            level = next((yl.level for yl in reversed(yaml_lines) if len(yl.text) - len(yl.text.lstrip()) <= current_indent), 0)
-        else:
-            level = yaml_lines[-1].level if yaml_lines else 0
-
-        yaml_lines.append(YamlLine(line, line_number + 1, level))
+            # We can unindent by one or more multiple of the current block indent amount
+            nesting_level -= (previous_indent - current_indent) / block_indent_amount
+            if not nesting_level.is_integer():
+                raise SyntaxError(f"Indent on line {line_number} is not a multiple of the block indent")
+            if nesting_level < 0:
+                raise SyntaxError(f"Indent to the left of the start on line {line_number}")
+        yaml_lines.append(Line(line, line_number + 1, nesting_level))
         previous_indent = current_indent
-
     return yaml_lines
 
 

@@ -1,5 +1,5 @@
 from structures import Line, Token, TokenType
-
+import re
 
 def scan_text(text):
     """
@@ -36,27 +36,38 @@ def parse_line_tokens(lines):
     Takes ordered list of Line objects as obtained from scan_text, and parses their contents
     in order to assign yaml tokens to each line
     """
+    level_parents = {}
     for line in lines:
         tokens = []
-        # TODO could be multiple per line
-        if line.startswith('- '):
-            tokens.append(Token(TokenType.LIST, line[2:].strip()))
-        elif line.startswith('#'):
-            tokens.append(Token(TokenType.METADATA, line[1:].strip()))
-        elif line.strip == "..." or not line.strip():
-            tokens.append(Token(TokenType.METADATA, line.strip()))
-        elif ': ' in line or line.endswith(':'):
-            # Splitting for dict key and possible inline values
-            key, *inline_values = line.split(':', 1)
+        if line.text.startswith('- '):
+            # Handle list items
+            tokens.append(Token(TokenType.LIST, line.text[2:].strip()))
+        elif line.text.startswith('#') or line.text.strip() == "..." or not line.text.strip():
+            # Handle metadata
+            tokens.append(Token(TokenType.METADATA, line.text.strip()))
+        elif ': ' in line.text or line.text.endswith(':'):
+            # Handle dictionary keys and possible inline values
+            key, *inline_values = line.text.split(':', 1)
             key = key.strip()
-            values = [key]
+            key_token = Token(TokenType.DICTIONARY, key)
+            tokens.append(key_token)
             if inline_values:
-                # Process inline values (e.g., [fast, secure])
-                inline_values = inline_values[0].strip().strip('[]').split(',')
-                values.extend(value.strip() for value in inline_values)
-            # TODO only takes one value
-            tokens.append(Token(TokenType.DICTIONARY, values))
+                # Further split inline values if they exist
+                inline_values = re.split(r',\s*(?![^[]*\])', inline_values[0].strip())
+                for value in inline_values:
+                    value = value.strip().strip('[]{}')
+                    if value:
+                        value_tokens = [Token(TokenType.SCALAR, v.strip()) for v in value.split(',')]
+                        for vt in value_tokens:
+                            vt.set_parent(key_token)
+                        tokens.extend(value_tokens)
         else:
-            tokens.append(Token(TokenType.SCALAR, line.strip()))
-        # TODO add to line, set parent
+            # Handle scalar values
+            tokens.append(Token(TokenType.SCALAR, line.text.strip()))
+
+        for token in tokens:
+            level_parents[line.level] = token
+            if line.level - 1 in level_parents and token.type != TokenType.SCALAR:
+                token.set_parent(level_parents[line.level - 1])
+            line.add_type(token)
 

@@ -1,5 +1,6 @@
-from structures import Line, Token, TokenType
+from structures import Line, Token
 import re
+
 
 def scan_text(text):
     """
@@ -26,45 +27,66 @@ def scan_text(text):
                     raise SyntaxError(f"Indent to the left of the start on line {line_number}: {line}")
                 indent_decrease -= block_indent_amounts.pop()
                 nesting_level -= 1
-        yaml_lines.append(Line(line, line_number + 1, nesting_level))
+        line_elements = split_nested_structures(line)
+        yaml_lines.append(Line(line_elements, line_number + 1, nesting_level))
         previous_indent = current_indent
     return yaml_lines
+
+
+def split_nested_structures(line):
+    tokens = []
+    buffer = ""
+    i = 0
+    length = len(line)
+    while i < length:
+        char = line[i]
+        i += 1
+        if char == '[':
+            buffer += char
+            # Include whitespace characters after '[' in the existing buffer
+            while i < length and line[i].isspace():
+                buffer += line[i]
+                i += 1
+            # Include quote characters after that in the existing buffer
+            if i < length and line[i] in ["'", '"']:
+                buffer += line[i]
+                i += 1
+            # Add what we have to tokens, and start a new buffer
+            tokens.append(buffer)
+            buffer = ""
+        elif char in ["'", '"']:
+            tokens.append(buffer)
+            buffer = char
+        elif char in [']', ','] and not line[i - 2].isspace():
+            tokens.append(buffer)
+            buffer = char
+        elif char.isspace():
+            j = i
+            # Skip over any more whitespace
+            while j < length and line[j].isspace():
+                j += 1
+            # If the non-whitespace character is a closer, then we don't want the j text and should split now
+            if j < length and line[j] in [']', ',']:
+                tokens.append(buffer)
+                buffer = char
+            else:
+                buffer += char
+        elif char.isalnum and len(buffer) > 0 and buffer[0] == ',':
+            tokens.append(buffer)
+            buffer = char
+        else:
+            buffer += char
+    tokens.append(buffer)
+    return tokens
 
 
 def parse_line_tokens(lines):
     """
     Takes ordered list of Line objects as obtained from scan_text, and parses their contents
-    in order to assign yaml tokens to each line
+    in order to assign yaml tokens to each line element. Returns the yaml tokens organised into a tree structure
     """
     level_parents = {}
     for line in lines:
-        tokens = []
-        if line.text.startswith('- '):
-            # Handle list items
-            tokens.append(Token(TokenType.LIST, line.text[2:].strip()))
-        elif line.text.startswith('#') or line.text.strip() == "..." or not line.text.strip():
-            # Handle metadata
-            tokens.append(Token(TokenType.METADATA, line.text.strip()))
-        elif ': ' in line.text or line.text.endswith(':'):
-            # Handle dictionary keys and possible inline values
-            key, *inline_values = line.text.split(':', 1)
-            key = key.strip()
-            key_token = Token(TokenType.DICTIONARY, key)
-            tokens.append(key_token)
-            if inline_values:
-                # Further split inline values if they exist
-                inline_values = re.split(r',\s*(?![^[]*\])', inline_values[0].strip())
-                for value in inline_values:
-                    value = value.strip().strip('[]{}')
-                    if value:
-                        value_tokens = [Token(TokenType.SCALAR, v.strip()) for v in value.split(',')]
-                        for vt in value_tokens:
-                            vt.set_parent(key_token)
-                        tokens.extend(value_tokens)
-        else:
-            # Handle scalar values
-            tokens.append(Token(TokenType.SCALAR, line.text.strip()))
-
         for token in tokens:
             level_parents[line.level] = token
             if line.level - 1 in level_parents and token.type != TokenType.SCALAR:

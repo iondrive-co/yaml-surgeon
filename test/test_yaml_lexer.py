@@ -1,6 +1,28 @@
 import unittest
-from yaml_lexer import scan_text
+from yaml_lexer import scan_text, split_nested_structures
 from structures import Line
+
+
+class TestYamlLineSplitting(unittest.TestCase):
+    def test_empty_line(self):
+        line = ""
+        expected = [""]
+        self.assertEqual(expected, split_nested_structures(line))
+
+    def test_nested_array(self):
+        line =      "        settings: [fast, secure ]"
+        expected = ["        settings: [", "fast", ", ", "secure", " ]"]
+        self.assertEqual(expected, split_nested_structures(line))
+
+    def test_nested_array_with_quotes(self):
+        line = '        settings2: [ "fast", "secure"]'
+        expected = ['        settings2: [ ', '"fast"', ', ', '"secure"', ']']
+        self.assertEqual(expected, split_nested_structures(line))
+
+    def test_nested_dict(self):
+        line = "        bob: {charlie: 3, d: 4}"
+        expected = ["        bob: {", "charlie", ": ", "3", ", ", "d", ": ", "4", "}"]
+        self.assertEqual(expected, split_nested_structures(line))
 
 
 class TestLexYaml(unittest.TestCase):

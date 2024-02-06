@@ -1,5 +1,91 @@
-from structures import Line, Token
-import re
+from structures import Line
+
+
+class AlphaSpansStateMachine:
+    def __init__(self):
+        self.state = 'Special'
+        self.current_span = ''
+        self.lookahead_span = ''
+        self.spans = []
+        self.start_quote = ''
+
+    def process(self, char):
+        if self.state == 'Special':
+            if char.isalnum():
+                self._end_span()
+                self.state = 'Alpha'
+                self.current_span += char
+            elif char in "'\"":
+                self.start_quote = char
+                self._end_span()
+                self.state = 'Quoted Alpha'
+                self.current_span += char
+            else:
+                self.current_span += char
+        elif self.state == 'Alpha':
+            if char in ':[]{},"\n':  # Terminating punctuation
+                self._end_span()
+                self.state = 'Special'
+                self.current_span += char
+            elif char.isalnum():
+                self.current_span += char
+            else:  # Other chars may be part of this span if more alpha are coming up
+                self.state = 'AlphaOrSpecial'
+                self.lookahead_span = char
+        elif self.state == 'AlphaOrSpecial':
+            if char in ':[]{},"\n':  # Terminating punctuation
+                self._end_span()
+                self.state = 'Special'
+                self.current_span += self.lookahead_span
+                self.lookahead_span = ''
+                self.current_span += char
+            elif char.isalnum():
+                self.current_span += self.lookahead_span
+                self.lookahead_span = ''
+                self.state = 'Alpha'
+            elif char in "'\"":
+                # Put the lookahead span into a special span first
+                self._end_span()
+                self.current_span = self.lookahead_span
+                self.lookahead_span = ''
+                self._end_span()
+                # Start a new quoted alpha span
+                self.start_quote = char
+                self.state = 'Quoted Alpha'
+                self.current_span += char
+            else:
+                self.lookahead_span += char
+        elif self.state == 'Quoted Alpha':
+            if char == self.start_quote:
+                # Include the quote in the current span
+                self.current_span += char
+                self._end_span()
+                self.state = 'Special'
+            else:
+                self.current_span += char
+
+    def _end_span(self):
+        if self.current_span:
+            self.spans.append(self.current_span)
+            self.current_span = ''
+
+    def parse(self, text):
+        if not text:
+            return [""]
+        for char in text:
+            self.process(char)
+        # Handle any remaining span when the end of the text is reached
+        self._end_span()
+        if self.lookahead_span:
+            self.current_span += self.lookahead_span
+            self._end_span()
+        # Clear state for next time
+        self.spans = []
+        self.state = 'Special'
+        return self.spans
+
+
+sm = AlphaSpansStateMachine()
 
 
 def scan_text(text):
@@ -27,69 +113,9 @@ def scan_text(text):
                     raise SyntaxError(f"Indent to the left of the start on line {line_number}: {line}")
                 indent_decrease -= block_indent_amounts.pop()
                 nesting_level -= 1
-        line_elements = split_nested_structures(line)
+        line_elements = sm.parse(line)
         yaml_lines.append(Line(line_elements, line_number + 1, nesting_level))
         previous_indent = current_indent
     return yaml_lines
 
-
-def split_nested_structures(line):
-    tokens = []
-    buffer = ""
-    i = 0
-    length = len(line)
-    while i < length:
-        char = line[i]
-        i += 1
-        if char == '[':
-            buffer += char
-            # Include whitespace characters after '[' in the existing buffer
-            while i < length and line[i].isspace():
-                buffer += line[i]
-                i += 1
-            # Include quote characters after that in the existing buffer
-            if i < length and line[i] in ["'", '"']:
-                buffer += line[i]
-                i += 1
-            # Add what we have to tokens, and start a new buffer
-            tokens.append(buffer)
-            buffer = ""
-        elif char in ["'", '"']:
-            tokens.append(buffer)
-            buffer = char
-        elif char in [']', ','] and not line[i - 2].isspace():
-            tokens.append(buffer)
-            buffer = char
-        elif char.isspace():
-            j = i
-            # Skip over any more whitespace
-            while j < length and line[j].isspace():
-                j += 1
-            # If the non-whitespace character is a closer, then we don't want the j text and should split now
-            if j < length and line[j] in [']', ',']:
-                tokens.append(buffer)
-                buffer = char
-            else:
-                buffer += char
-        elif char.isalnum and len(buffer) > 0 and buffer[0] == ',':
-            tokens.append(buffer)
-            buffer = char
-        else:
-            buffer += char
-    tokens.append(buffer)
-    return tokens
-
-
-def parse_line_tokens(lines):
-    """
-    Takes ordered list of Line objects as obtained from scan_text, and parses their contents
-    in order to assign yaml tokens to each line element. Returns the yaml tokens organised into a tree structure
-    """
-    level_parents = {}
-    for line in lines:
-        for token in tokens:
-            level_parents[line.level] = token
-            if line.level - 1 in level_parents and token.type != TokenType.SCALAR:
-                token.set_parent(level_parents[line.level - 1])
-            line.add_type(token)
 

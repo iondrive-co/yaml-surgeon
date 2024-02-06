@@ -1,28 +1,40 @@
 import unittest
-from yaml_lexer import scan_text, split_nested_structures
+from yaml_lexer import scan_text, AlphaSpansStateMachine
 from structures import Line
 
 
 class TestYamlLineSplitting(unittest.TestCase):
+    sm = AlphaSpansStateMachine()
+
     def test_empty_line(self):
         line = ""
         expected = [""]
-        self.assertEqual(expected, split_nested_structures(line))
+        self.assertEqual(expected, self.sm.parse(line))
+
+    def test_unquoted_quoted_string(self):
+        line = "Hello, 'world! This is a test.' (StateMachine)"
+        expected = ["Hello", ", ", "'world! This is a test.'", " (", "StateMachine", ")"]
+        self.assertEqual(expected, self.sm.parse(line))
+
+    def test_array(self):
+        line =      "        settings: []"
+        expected = ["        ", "settings", ": []"]
+        self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_array(self):
         line =      "        settings: [fast, secure ]"
-        expected = ["        settings: [", "fast", ", ", "secure", " ]"]
-        self.assertEqual(expected, split_nested_structures(line))
+        expected = ["        ", "settings", ": [", "fast", ", ", "secure", " ]"]
+        self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_array_with_quotes(self):
         line = '        settings2: [ "fast", "secure"]'
-        expected = ['        settings2: [ ', '"fast"', ', ', '"secure"', ']']
-        self.assertEqual(expected, split_nested_structures(line))
+        expected = ["        ", "settings2", ": [ ", '"fast"', ', ', '"secure"', ']']
+        self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_dict(self):
         line = "        bob: {charlie: 3, d: 4}"
-        expected = ["        bob: {", "charlie", ": ", "3", ", ", "d", ": ", "4", "}"]
-        self.assertEqual(expected, split_nested_structures(line))
+        expected = ["        ", "bob", ": {", "charlie", ": ", "3", ", ", "d", ": ", "4", "}"]
+        self.assertEqual(expected, self.sm.parse(line))
 
 
 class TestLexYaml(unittest.TestCase):
@@ -38,15 +50,16 @@ class TestLexYaml(unittest.TestCase):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml1"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
-            Line("- serverConfig:", 1, 0),
-            Line("    - srv-100:", 2, 1),
-            Line("        settings: [fast, secure]", 3, 2),
-            Line("    - srv-200:", 4, 1),
-            Line("        settings: [reliable, scalable]", 5, 2),
-            Line("        backup_to: storageUnit", 6, 2),
-            Line("- database:", 7, 0),
-            Line("    - srv-300", 8, 1),
-            Line("- webApp", 9, 0)
+            Line(text_elements=["    - ", "srv-100", ":"], line_number=1, level=0),
+            Line(text_elements=["        ", "settings", ": [", "fast", ", ", "secure", "]"], line_number=2, level=1),
+            Line(text_elements=["    - ", "srv-200", ":"], line_number=3, level=2),
+            Line(text_elements=["        ", "settings", ": [", "reliable", ", ", "scalable", "]"], line_number=4,
+                 level=1),
+            Line(text_elements=["        ", "backup_to", ": ", "storageUnit"], line_number=5, level=2),
+            Line(text_elements=["- ", "database", ":"], line_number=6, level=2),
+            Line(text_elements=["    - ", "srv-300"], line_number=7, level=0),
+            Line(text_elements=["- ", "webApp"], line_number=8, level=1),
+            Line(text_elements=[], line_number=9, level=0)
         ]
         self.assertEqual(expected, parsed_yaml)
 
@@ -54,16 +67,16 @@ class TestLexYaml(unittest.TestCase):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml2"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
-            Line("apiVersion: v1", 1, 0),
-            Line("kind: Pod", 2, 0),
-            Line("metadata:", 3, 0),
-            Line(" name: apache-pod", 4, 1),
-            Line(" labels:", 5, 1),
-            Line("   app: web", 6, 2),
-            Line("   steps:", 7, 2),
-            Line("     - uses: actions/checkout@v2", 8, 3),
-            Line("     - name: Set up Python", 9, 3),
-            Line("...", 10, 0)
+            Line(text_elements=['apiVersion', ': ', 'v1'], line_number=1, level=0),
+            Line(text_elements=['kind', ': ', 'Pod'], line_number=2, level=0),
+            Line(text_elements=['metadata', ':'], line_number=3, level=0),
+            Line(text_elements=[' ', 'name', ': ', 'apache-pod'], line_number=4, level=1),
+            Line(text_elements=[' ', 'labels', ':'], line_number=5, level=1),
+            Line(text_elements=['   ', 'app', ': ', 'web'], line_number=6, level=2),
+            Line(text_elements=['   ', 'steps', ':'], line_number=7, level=2),
+            Line(text_elements=['     - ', 'uses', ': ', 'actions/checkout@v2'], line_number=8, level=3),
+            Line(text_elements=['     - ', 'name', ': ', 'Set up Python'], line_number=9, level=3),
+            Line(text_elements=['...'], line_number=10, level=0)
         ]
         self.assertEqual(expected, parsed_yaml)
 
@@ -71,15 +84,15 @@ class TestLexYaml(unittest.TestCase):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml3"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
-            Line("...", 1, 0),
-            Line("# Document start", 2, 0),
-            Line("kind: Pod # Comment at line end", 3, 0),
-            Line("metadata:", 4, 0),
-            Line("  # A comment line", 5, 1),
-            Line("  build: \"2020-01-01\"", 6, 1),
-            Line("  resources:", 7, 1),
-            Line("    # Nothing here but a comment", 8, 2),
-            Line("  emptyLabel: {}", 9, 1)
+            Line(text_elements=["...", ], line_number=1, level=0),
+            Line(text_elements=["# ", "Document start"], line_number=2, level=0),
+            Line(text_elements=["kind", ": ", "Pod # Comment at line end"], line_number=3, level=0),
+            Line(text_elements=["metadata", ":"], line_number=4, level=0),
+            Line(text_elements=["  # ", "A comment line"], line_number=5, level=1),
+            Line(text_elements=["  ", "build", ": ", "\"2020-01-01\""], line_number=6, level=1),
+            Line(text_elements=["  ", "resources", ":"], line_number=7, level=1),
+            Line(text_elements=["    # ", "Nothing here but a comment"], line_number=8, level=2),
+            Line(text_elements=["  ", "emptyLabel", ": {}"], line_number=9, level=1)
         ]
         self.assertEqual(expected, parsed_yaml)
 

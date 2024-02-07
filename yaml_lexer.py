@@ -42,6 +42,7 @@ class AlphaSpansStateMachine:
             elif char.isalnum():
                 self.current_span += self.lookahead_span
                 self.lookahead_span = ''
+                self.current_span += char
                 self.state = 'Alpha'
             elif char in "'\"":
                 # Put the lookahead span into a special span first
@@ -80,9 +81,10 @@ class AlphaSpansStateMachine:
             self.current_span += self.lookahead_span
             self._end_span()
         # Clear state for next time
+        spans_text = self.spans
         self.spans = []
         self.state = 'Special'
-        return self.spans
+        return spans_text
 
 
 sm = AlphaSpansStateMachine()

@@ -27,13 +27,18 @@ class TestYamlLineSplitting(unittest.TestCase):
         self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_array_with_quotes(self):
-        line = '        settings2: [ "fast", "secure"]'
-        expected = ["        ", "settings2", ": [ ", '"fast"', ', ', '"secure"', ']']
+        line = '        settings2: [ "fast:", "secure"]'
+        expected = ["        ", "settings2", ": [ ", '"fast:"', ', ', '"secure"', ']']
         self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_dict(self):
         line = "        bob: {charlie: 3, d: 4}"
         expected = ["        ", "bob", ": {", "charlie", ": ", "3", ", ", "d", ": ", "4", "}"]
+        self.assertEqual(expected, self.sm.parse(line))
+
+    def test_comment(self):
+        line = "# Document start"
+        expected = ["# ", "Document start"]
         self.assertEqual(expected, self.sm.parse(line))
 
 
@@ -50,16 +55,16 @@ class TestLexYaml(unittest.TestCase):
         yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml1"]
         parsed_yaml = scan_text(yaml_content)
         expected = [
-            Line(text_elements=["    - ", "srv-100", ":"], line_number=1, level=0),
-            Line(text_elements=["        ", "settings", ": [", "fast", ", ", "secure", "]"], line_number=2, level=1),
-            Line(text_elements=["    - ", "srv-200", ":"], line_number=3, level=2),
-            Line(text_elements=["        ", "settings", ": [", "reliable", ", ", "scalable", "]"], line_number=4,
-                 level=1),
-            Line(text_elements=["        ", "backup_to", ": ", "storageUnit"], line_number=5, level=2),
-            Line(text_elements=["- ", "database", ":"], line_number=6, level=2),
-            Line(text_elements=["    - ", "srv-300"], line_number=7, level=0),
-            Line(text_elements=["- ", "webApp"], line_number=8, level=1),
-            Line(text_elements=[], line_number=9, level=0)
+            Line(text_elements=["- ", "serverConfig", ":"], line_number=1, level=0),
+            Line(text_elements=["    - ", "srv-100", ":"], line_number=2, level=1),
+            Line(text_elements=["        ", "settings", ": [", "fast", ", ", "secure", "]"], line_number=3, level=2),
+            Line(text_elements=["    - ", "srv-200", ":"], line_number=4, level=1),
+            Line(text_elements=["        ", "settings", ": [", "reliable", ", ", "scalable", "]"], line_number=5,
+                 level=2),
+            Line(text_elements=["        ", "backup_to", ": ", "storageUnit"], line_number=6, level=2),
+            Line(text_elements=["- ", "database", ":"], line_number=7, level=0),
+            Line(text_elements=["    - ", "srv-300"], line_number=8, level=1),
+            Line(text_elements=["- ", "webApp"], line_number=9, level=0),
         ]
         self.assertEqual(expected, parsed_yaml)
 

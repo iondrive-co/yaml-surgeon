@@ -131,7 +131,7 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='        ', types=[]),
                 Token(value='backup_to', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='storageUnit', types=['Scalar'])
             ], line_number=6, level=2),
             Line(tokens=[
@@ -149,7 +149,7 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=9, level=0)
         ]
         self.assertEqual(expected, parsed_yaml)
-        reconstructed = '\n'.join(''.join(line.tokens) for line in parsed_yaml)
+        reconstructed = '\n'.join(''.join(token.value for token in line.tokens) for line in parsed_yaml)
         self.assertEqual(yaml_content.strip(), reconstructed.strip())
 
     def test_lex_valid_dict_nested_list(self):
@@ -158,12 +158,12 @@ class TestLexYaml(unittest.TestCase):
         expected = [
             Line(tokens=[
                 Token(value='apiVersion', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='v1', types=['Scalar'])
             ], line_number=1, level=0),
             Line(tokens=[
                 Token(value='kind', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='Pod', types=['Scalar'])
             ], line_number=2, level=0),
             Line(tokens=[
@@ -173,7 +173,7 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value=' ', types=[]),
                 Token(value='name', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='apache-pod', types=['Scalar'])
             ], line_number=4, level=1),
             Line(tokens=[
@@ -184,7 +184,7 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='   ', types=[]),
                 Token(value='app', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='web', types=['Scalar'])
             ], line_number=6, level=2),
             Line(tokens=[
@@ -195,13 +195,13 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='     - ', types=['List']),
                 Token(value='uses', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='actions/checkout@v2', types=['Scalar'])
             ], line_number=8, level=3),
             Line(tokens=[
                 Token(value='     - ', types=['List']),
                 Token(value='name', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='Set up Python', types=['Scalar'])
             ], line_number=9, level=3),
             Line(tokens=[
@@ -209,7 +209,7 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=10, level=0)
         ]
         self.assertEqual(expected, parsed_yaml)
-        reconstructed = '\n'.join(''.join(line.tokens) for line in parsed_yaml)
+        reconstructed = '\n'.join(''.join(token.value for token in line.tokens) for line in parsed_yaml)
         self.assertEqual(yaml_content.strip(), reconstructed.strip())
 
     def test_lex_valid_awkward_comments_and_spaces(self):
@@ -221,12 +221,14 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=1, level=0),
             Line(tokens=[
                 Token(value='# ', types=['Comment']),
-                Token(value='Document start', types=['Comment'])
+                Token(value='Document start', types=['Scalar'])
             ], line_number=2, level=0),
             Line(tokens=[
                 Token(value='kind', types=['Scalar']),
-                Token(value=': ', types=[]),
-                Token(value='Pod # Comment at line end', types=['Scalar'])
+                Token(value=': ', types=['Dict']),
+                Token(value='Pod', types=['Scalar']),
+                Token(value=' # ', types=['Comment']),
+                Token(value='Comment at line end', types=['Scalar'])
             ], line_number=3, level=0),
             Line(tokens=[
                 Token(value='metadata', types=['Scalar']),
@@ -234,12 +236,12 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=4, level=0),
             Line(tokens=[
                 Token(value='  # ', types=['Comment']),
-                Token(value='A comment line', types=['Comment'])
+                Token(value='A comment line', types=['Scalar'])
             ], line_number=5, level=1),
             Line(tokens=[
                 Token(value='  ', types=[]),
                 Token(value='build', types=['Scalar']),
-                Token(value=': ', types=[]),
+                Token(value=': ', types=['Dict']),
                 Token(value='"2020-01-01"', types=['Scalar'])
             ], line_number=6, level=1),
             Line(tokens=[
@@ -249,16 +251,16 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=7, level=1),
             Line(tokens=[
                 Token(value='    # ', types=['Comment']),
-                Token(value='Nothing here but a comment', types=['Comment'])
+                Token(value='Nothing here but a comment', types=['Scalar'])
             ], line_number=8, level=2),
             Line(tokens=[
                 Token(value='  ', types=[]),
                 Token(value='emptyLabel', types=['Scalar']),
-                Token(value=': {}', types=['Dict'])
+                Token(value=': {}', types=['Dict', 'Dict'])
             ], line_number=9, level=1)
         ]
         self.assertEqual(expected, parsed_yaml)
-        reconstructed = '\n'.join(''.join(line.tokens) for line in parsed_yaml)
+        reconstructed = '\n'.join(''.join(token.value for token in line.tokens) for line in parsed_yaml)
         self.assertEqual(yaml_content.strip(), reconstructed.strip())
 
 

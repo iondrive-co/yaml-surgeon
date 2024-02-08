@@ -4,7 +4,7 @@ from structures import Line, Token
 class AlphaSpansStateMachine:
 
     # These characters end an unquoted alpha span
-    terminating_chars = '-:[]{},"\n#'
+    terminating_chars = ':]},#'
 
     def __init__(self):
         self.state = 'Special'
@@ -32,18 +32,16 @@ class AlphaSpansStateMachine:
                     self.span_types.append('List')
                 elif char in ':{':
                     self.span_types.append('Dict')
-                elif char in '#':
+                elif char == '#':
                     self.span_types.append('Comment')
                 self.current_span += char
         elif self.state == 'Alpha':
             if char in self.terminating_chars:
                 self._end_span()
                 self.state = 'Special'
-                if char in '-[':
-                    self.span_types.append('List')
-                elif char in ':{':
+                if char == ':':
                     self.span_types.append('Dict')
-                elif char in '#':
+                elif char == '#':
                     self.span_types.append('Comment')
                 self.current_span += char
             elif char.isalnum():
@@ -55,11 +53,9 @@ class AlphaSpansStateMachine:
             if char in self.terminating_chars:
                 self._end_span()
                 self.state = 'Special'
-                if char in '-[':
-                    self.span_types.append('List')
-                elif char in ':{':
+                if char == ':':
                     self.span_types.append('Dict')
-                elif char in '#':
+                elif char == '#':
                     self.span_types.append('Comment')
                 self.current_span += self.lookahead_span
                 self.lookahead_span = ''

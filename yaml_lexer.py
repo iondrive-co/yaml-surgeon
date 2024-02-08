@@ -1,31 +1,50 @@
-from structures import Line
+from structures import Line, Token
 
 
 class AlphaSpansStateMachine:
+
+    # These characters end an unquoted alpha span
+    terminating_chars = '-:[]{},"\n#'
+
     def __init__(self):
         self.state = 'Special'
         self.current_span = ''
         self.lookahead_span = ''
         self.spans = []
         self.start_quote = ''
+        self.span_types = []
 
     def process(self, char):
         if self.state == 'Special':
             if char.isalnum():
                 self._end_span()
                 self.state = 'Alpha'
+                self.span_types.append('Scalar')
                 self.current_span += char
             elif char in "'\"":
                 self.start_quote = char
                 self._end_span()
                 self.state = 'Quoted Alpha'
+                self.span_types.append('Scalar')
                 self.current_span += char
             else:
+                if char in '-[':
+                    self.span_types.append('List')
+                elif char in ':{':
+                    self.span_types.append('Dict')
+                elif char in '#':
+                    self.span_types.append('Comment')
                 self.current_span += char
         elif self.state == 'Alpha':
-            if char in ':[]{},"\n':  # Terminating punctuation
+            if char in self.terminating_chars:
                 self._end_span()
                 self.state = 'Special'
+                if char in '-[':
+                    self.span_types.append('List')
+                elif char in ':{':
+                    self.span_types.append('Dict')
+                elif char in '#':
+                    self.span_types.append('Comment')
                 self.current_span += char
             elif char.isalnum():
                 self.current_span += char
@@ -33,9 +52,15 @@ class AlphaSpansStateMachine:
                 self.state = 'AlphaOrSpecial'
                 self.lookahead_span = char
         elif self.state == 'AlphaOrSpecial':
-            if char in ':[]{},"\n':  # Terminating punctuation
+            if char in self.terminating_chars:
                 self._end_span()
                 self.state = 'Special'
+                if char in '-[':
+                    self.span_types.append('List')
+                elif char in ':{':
+                    self.span_types.append('Dict')
+                elif char in '#':
+                    self.span_types.append('Comment')
                 self.current_span += self.lookahead_span
                 self.lookahead_span = ''
                 self.current_span += char
@@ -67,8 +92,9 @@ class AlphaSpansStateMachine:
 
     def _end_span(self):
         if self.current_span:
-            self.spans.append(self.current_span)
+            self.spans.append(Token(self.current_span, self.span_types))
             self.current_span = ''
+            self.span_types = []
 
     def parse(self, text):
         if not text:
@@ -77,9 +103,10 @@ class AlphaSpansStateMachine:
             self.process(char)
         # Handle any remaining span when the end of the text is reached
         self._end_span()
+        # If there was any lookahead span, that means it is a special span not connected to the previous alpha span
         if self.lookahead_span:
             self.current_span += self.lookahead_span
-            self._end_span()
+        self._end_span()
         # Clear state for next time
         spans_text = self.spans
         self.spans = []

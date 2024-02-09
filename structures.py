@@ -37,4 +37,20 @@ class Line:
                f"level={self.level})"
 
 
+class SyntaxNode:
+    def __init__(self, name):
+        self.name = name
+        self.children = []
 
+    def add_child(self, child):
+        self.children.append(child)
+
+    def __eq__(self, other):
+        if isinstance(other, Line):
+            return (self.name == other.name and
+                    self.children == other.children)
+        return False
+
+    def __repr__(self):
+        return f"SyntaxNode(name='{self.name}', " \
+               f"children={self.children})"

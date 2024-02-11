@@ -46,7 +46,7 @@ class SyntaxNode:
         self.children.append(child)
 
     def __eq__(self, other):
-        if isinstance(other, Line):
+        if isinstance(other, SyntaxNode):
             return (self.name == other.name and
                     self.children == other.children)
         return False

@@ -43,18 +43,3 @@ def parse_line_tokens(lines):
                     # This is a flow style nested list
                     level += 1
     return nodes
-
-
-def find_children_of_node(nodes, name, level=None):
-    result = []
-
-    def search(node, current_level):
-        if (level is None or current_level == level) and node.name == name:
-            result.extend(node.children)
-        elif level is None or current_level < level:
-            for child in node.children:
-                search(child, current_level + 1)
-
-    for node in nodes:
-        search(node, 0)
-    return result

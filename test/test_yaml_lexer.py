@@ -12,13 +12,13 @@ class TestYamlLineSplitting(unittest.TestCase):
         self.assertEqual(expected, self.sm.parse(line))
 
     def test_unquoted_quoted_string(self):
-        line = "Hello, 'world! This is a test.' (StateMachine)"
+        line = "I Yam, 'what I yam.' (l)"
         expected = [
-            Token(value='Hello', types=['Scalar']),
+            Token(value='I Yam', types=['Scalar']),
             Token(value=', ', types=[]),
-            Token(value="'world! This is a test.'", types=['Scalar']),
+            Token(value="'what I yam.'", types=['Scalar']),
             Token(value=' (', types=[]),
-            Token(value='StateMachine', types=['Scalar']),
+            Token(value='l', types=['Scalar']),
             Token(value=')', types=[])
         ]
         self.assertEqual(expected, self.sm.parse(line))

@@ -10,8 +10,10 @@ def parse_line_tokens(lines):
     nodes = []
     for line in lines:
         level = line.level
+        # Keep track of what we have already seen on this line
         line_has_dict = False
         line_has_comment = False
+        line_has_scalar = False
         for token in line.tokens:
             if line_has_comment:
                 break
@@ -21,14 +23,19 @@ def parse_line_tokens(lines):
                     line_has_comment = True
                     break
                 elif token_type == 'Scalar':
-                    level_parents[level] = SyntaxNode(token.value)
-                    if level == 0:
-                        nodes.append(level_parents[level])
+                    # If this line already has a scalar and no nested structures, add this one as a child
+                    if line_has_scalar and level == line.level:
+                        level_parents[level].add_child(SyntaxNode(token.value))
                     else:
-                        level_parents[level - 1].add_child(level_parents[level])
+                        level_parents[level] = SyntaxNode(token.value)
+                        if level == 0:
+                            nodes.append(level_parents[level])
+                        else:
+                            level_parents[level - 1].add_child(level_parents[level])
+                    line_has_scalar = True
                 elif token_type == 'Dict':
                     if line_has_dict:
-                        # This is a flow style nested dictionary
+                        # Second dict token makes this a flow style nested dictionary
                         level += 1
                     else:
                         line_has_dict = True

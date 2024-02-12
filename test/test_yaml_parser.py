@@ -30,8 +30,9 @@ class TestParseYaml(unittest.TestCase):
         settings200.add_child(SyntaxNode('reliable'))
         settings200.add_child(SyntaxNode('scalable'))
         srv200.add_child(settings200)
-        srv200.add_child(SyntaxNode('backup_to'))
-        srv200.add_child(SyntaxNode('storageUnit'))
+        backup_to = SyntaxNode('backup_to')
+        srv200.add_child(backup_to)
+        backup_to.add_child(SyntaxNode('storageUnit'))
 
         serverConfig.add_child(srv100)
         serverConfig.add_child(srv200)
@@ -64,19 +65,24 @@ class TestParseYaml(unittest.TestCase):
         parsed_yaml = parse_line_tokens(lexed_lines)
 
         apiVersion = SyntaxNode('apiVersion')
+        apiVersion.add_child(SyntaxNode('v1'))
         kind = SyntaxNode('kind')
+        kind.add_child(SyntaxNode('Pod'))
         metadata = SyntaxNode('metadata')
         name = SyntaxNode('name')
+        name.add_child(SyntaxNode('apache-pod'))
         labels = SyntaxNode('labels')
         app = SyntaxNode('app')
+        app.add_child(SyntaxNode('web'))
         steps = SyntaxNode('steps')
         step1 = SyntaxNode('uses')
+        step1.add_child(SyntaxNode('actions/checkout@v2'))
         step2 = SyntaxNode('name')
-
-        labels.add_child(app)
-        labels.add_child(steps)
+        step2.add_child(SyntaxNode('Set up Python'))
         steps.add_child(step1)
         steps.add_child(step2)
+        labels.add_child(app)
+        labels.add_child(steps)
         metadata.add_child(name)
         metadata.add_child(labels)
 
@@ -102,11 +108,12 @@ class TestParseYaml(unittest.TestCase):
         parsed_yaml = parse_line_tokens(lexed_lines)
 
         kind = SyntaxNode('kind')
+        kind.add_child(SyntaxNode('Pod'))
         metadata = SyntaxNode('metadata')
         build = SyntaxNode('build')
+        build.add_child(SyntaxNode('"2020-01-01"'))
         resources = SyntaxNode('resources')
         emptyLabel = SyntaxNode('emptyLabel')
-
         metadata.add_child(build)
         metadata.add_child(resources)
         metadata.add_child(emptyLabel)
@@ -124,7 +131,7 @@ class TestParseYaml(unittest.TestCase):
         assert_syntax_nodes_equal(expected, result)
 
         result_level = find_children_of_node(parsed_yaml, 'kind', 0)
-        expected = []  # Assuming 'kind' has no children at level 0
+        expected = [SyntaxNode('Pod')]
         assert_syntax_nodes_equal(expected, result_level)
 
 

@@ -1,7 +1,7 @@
 import unittest
 from yaml_lexer import scan_text
 from yaml_parser import parse_line_tokens
-from yaml_operation import find_children_of_node, select
+from yaml_operation import find_children_of_node, NodeSelector
 from structures import SyntaxNode
 
 
@@ -89,11 +89,11 @@ class TestNodeSelector(unittest.TestCase):
         - webApp"""
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
-        selected_nodes = select(parsed_yaml).name('srv-100').execute()
+        selected_nodes = NodeSelector().named('srv-100').select_on(parsed_yaml)
         self.assertEqual(len(selected_nodes), 2)
         self.assertEqual(selected_nodes[0].name, 'srv-100', 'srv-100')
 
-        selected_nodes = select(parsed_yaml).name('srv-100').childOf('parent2').execute()
+        selected_nodes = NodeSelector().named('srv-100').parent('parent2').select_on(parsed_yaml)
         self.assertEqual(len(selected_nodes), 1)
         self.assertEqual(selected_nodes[0].name, 'srv-100')
         child_names = [child.name for child in selected_nodes[0].children]

@@ -19,54 +19,69 @@ def main():
     lexed_lines = scan_text(text)
     parsed_yaml = parse_line_tokens(lexed_lines)
 
-    selector = select(parsed_yaml)
-
+    selector = NodeSelector()
     if args.name:
-        selector.name(args.name)
+        selector.named(args.name)
     if args.childOf:
-        selector.childOf(args.childOf)
+        selector.parent(args.childOf)
     if args.copy:
-        selector.copy(args.copy)
-    if args.delete:
-        selector.delete()
-
-    result = selector.execute()
+        result = NodeExecutor(selector).copy(args.copy).execute()
+    elif args.delete:
+        result = NodeExecutor(selector).delete().execute()
+    else:
+        result = selector.select_on(parsed_yaml)
     print(result)
 
 
 class NodeSelector:
-    def __init__(self, nodes):
-        self.nodes = nodes
+
+    def __init__(self):
+        self.name = None
+        self.parent_name = None
+
+    def named(self, name):
+        self.name = name
+        return self
+
+    def parent(self, parent_name):
+        self.parent_name = parent_name
+        return self
+
+    def select_on(self, nodes):
+        if self.parent_name is not None:
+            selected_nodes = find_children_of_node(nodes, self.parent_name)
+        else:
+            selected_nodes = nodes
+        if self.name is not None:
+            selected_nodes = recursive_search(selected_nodes, self.name)
+        return selected_nodes
+
+
+class NodeExecutor:
+    def __init__(self, node_selector):
+        self.node_selector = node_selector
         self.selected_nodes = []
-
-    def name(self, name):
-        self.selected_nodes = self._recursive_search(self.nodes, name)
-        return self
-
-    def _recursive_search(self, nodes, name):
-        result = []
-        for node in nodes:
-            if node.name == name:
-                result.append(node)
-            result.extend(self._recursive_search(node.children, name))
-        return result
-
-    def childOf(self, parent_name):
-        self.selected_nodes = find_children_of_node(self.nodes, parent_name)
-        return self
 
     def copy(self, new_name):
         raise NotImplemented
+        return self
 
     def delete(self):
         raise NotImplemented
+        return self
 
     def execute(self):
-        return self.selected_nodes
+        self.selected_nodes = self.node_selector.select_on()
+        return self
 
 
-def select(nodes):
-    return NodeSelector(nodes)
+def recursive_search(nodes, name):
+    result = []
+    for node in nodes:
+        if node.name == name:
+            result.append(node)
+        result.extend(recursive_search(node.children, name))
+    return result
 
 
 def find_children_of_node(nodes, name, level=None):

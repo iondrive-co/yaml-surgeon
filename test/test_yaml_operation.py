@@ -1,7 +1,7 @@
 import unittest
 from yaml_lexer import scan_text
 from yaml_parser import parse_line_tokens
-from yaml_operation import find_children_of_node, NodeSelector
+from yaml_operation import find_children_of_node, NodeSelector, create_line_number_map
 from structures import SyntaxNode
 
 
@@ -89,15 +89,62 @@ class TestNodeSelector(unittest.TestCase):
         - webApp"""
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
-        selected_nodes = NodeSelector().named('srv-100').select_on(parsed_yaml)
+        selected_nodes = NodeSelector(parsed_yaml).named('srv-100').select_on()
         self.assertEqual(len(selected_nodes), 2)
         self.assertEqual(selected_nodes[0].name, 'srv-100', 'srv-100')
 
-        selected_nodes = NodeSelector().named('srv-100').parent('parent2').select_on(parsed_yaml)
+        selected_nodes = NodeSelector(parsed_yaml).named('srv-100').parent('parent2').select_on()
         self.assertEqual(len(selected_nodes), 1)
         self.assertEqual(selected_nodes[0].name, 'srv-100')
         child_names = [child.name for child in selected_nodes[0].children]
         self.assertIn('secure', child_names)
+
+
+class TestHelperFunctions(unittest.TestCase):
+
+    def test_create_line_number_map(self):
+        serverConfig = SyntaxNode('serverConfig', '0')
+        srv100 = SyntaxNode('srv-100', '1')
+        settings100 = SyntaxNode('settings', '2')
+        settings100.add_child(SyntaxNode('fast', '2'))
+        settings100.add_child(SyntaxNode('secure', '2'))
+        srv100.add_child(settings100)
+
+        srv200 = SyntaxNode('srv-200', '3')
+        settings200 = SyntaxNode('settings', '4')
+        settings200.add_child(SyntaxNode('reliable', '4'))
+        settings200.add_child(SyntaxNode('scalable', '4'))
+        srv200.add_child(settings200)
+        backup_to = SyntaxNode('backup_to', '5')
+        backup_to.add_child(SyntaxNode('storageUnit', '5'))
+        srv200.add_child(backup_to)
+
+        serverConfig.add_child(srv100)
+        serverConfig.add_child(srv200)
+
+        database = SyntaxNode('database', '6')
+        srv300 = SyntaxNode('srv-300', '7')
+        database.add_child(srv300)
+
+        webApp = SyntaxNode('webApp', '8')
+
+        syntax_nodes = [serverConfig, database, webApp]
+
+        line_map = create_line_number_map(syntax_nodes)
+
+        self.assertIn('0', line_map)
+        self.assertIn('1', line_map)
+        self.assertIn('2', line_map)
+        self.assertIn('3', line_map)
+        self.assertIn('4', line_map)
+        self.assertIn('5', line_map)
+        self.assertIn('6', line_map)
+        self.assertIn('7', line_map)
+        self.assertIn('8', line_map)
+
+        self.assertEqual(len(line_map['2']), 3, "There should be three nodes on line 2")
+        self.assertEqual(len(line_map['4']), 3, "There should be three nodes on line 4")
+        self.assertEqual(len(line_map['5']), 2, "There should be two nodes on line 5")
 
 
 if __name__ == '__main__':

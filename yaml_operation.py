@@ -1,4 +1,5 @@
 import argparse
+from collections import defaultdict
 from yaml_lexer import scan_text
 from yaml_parser import parse_line_tokens
 
@@ -19,25 +20,25 @@ def main():
     lexed_lines = scan_text(text)
     parsed_yaml = parse_line_tokens(lexed_lines)
 
-    selector = NodeSelector()
+    selector = NodeSelector(parsed_yaml)
     if args.name:
         selector.named(args.name)
     if args.childOf:
         selector.parent(args.childOf)
+    executor = NodeExecutor(selector, lexed_lines)
     if args.copy:
-        result = NodeExecutor(selector).copy(args.copy).execute()
+        executor = executor.copy(args.copy)
     elif args.delete:
-        result = NodeExecutor(selector).delete().execute()
-    else:
-        result = selector.select_on(parsed_yaml)
-    print(result)
+        executor = executor.delete()
+    print(executor.execute())
 
 
 class NodeSelector:
 
-    def __init__(self):
+    def __init__(self, nodes):
         self.name = None
         self.parent_name = None
+        self.nodes = nodes
 
     def named(self, name):
         self.name = name
@@ -47,32 +48,40 @@ class NodeSelector:
         self.parent_name = parent_name
         return self
 
-    def select_on(self, nodes):
+    def select_on(self):
         if self.parent_name is not None:
-            selected_nodes = find_children_of_node(nodes, self.parent_name)
+            selected_nodes = find_children_of_node(self.nodes, self.parent_name)
         else:
-            selected_nodes = nodes
+            selected_nodes = self.nodes
         if self.name is not None:
             selected_nodes = recursive_search(selected_nodes, self.name)
         return selected_nodes
 
 
 class NodeExecutor:
-    def __init__(self, node_selector):
+    def __init__(self, node_selector, lexed_lines):
         self.node_selector = node_selector
-        self.selected_nodes = []
+        self.lexed_lines = lexed_lines
+        self.copy_to = None
+        self.do_delete = False
 
     def copy(self, new_name):
-        raise NotImplemented
+        self.copy_to = new_name
         return self
 
     def delete(self):
-        raise NotImplemented
+        self.do_delete = True
         return self
 
     def execute(self):
-        self.selected_nodes = self.node_selector.select_on()
-        return self
+        selected_nodes = self.node_selector.select_on()
+        if self.copy_to is not None:
+            # TODO modify selected nodes
+            raise NotImplemented
+        if self.do_delete is True:
+            # TODO remove selected nodes
+            raise NotImplemented
+        return to_lines(selected_nodes, self.lexed_lines)
 
 
 def recursive_search(nodes, name):
@@ -97,3 +106,22 @@ def find_children_of_node(nodes, name, level=None):
     for node in nodes:
         search(node, 0)
     return result
+
+
+def create_line_number_map(syntax_nodes):
+    line_map = defaultdict(list)
+
+    def add_to_map(node):
+        line_map[node.line_number].append(node)
+        for child in node.children:
+            add_to_map(child)
+
+    for node in syntax_nodes:
+        add_to_map(node)
+
+    return dict(sorted(line_map.items()))
+
+
+def to_lines(nodes, lexed_lines):
+    line_node_map = create_line_number_map(nodes)
+    return None

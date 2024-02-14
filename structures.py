@@ -38,8 +38,9 @@ class Line:
 
 
 class SyntaxNode:
-    def __init__(self, name):
+    def __init__(self, name, line_number):
         self.name = name
+        self.line_number = line_number
         self.children = []
 
     def add_child(self, child):
@@ -48,9 +49,11 @@ class SyntaxNode:
     def __eq__(self, other):
         if isinstance(other, SyntaxNode):
             return (self.name == other.name and
+                    self.line_number == other.line_number and
                     self.children == other.children)
         return False
 
     def __repr__(self):
         return f"SyntaxNode(name='{self.name}', " \
+               f"line_number='{self.line_number}', " \
                f"children={self.children})"

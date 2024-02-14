@@ -3,12 +3,12 @@ from structures import SyntaxNode
 
 def parse_line_tokens(lines):
     """
-    Takes and ordered list of Line objects as obtained from the lexer, and parses their contents to produce an abstract
-    syntax represenation of the type and relationships of the yaml elements
+    Takes an ordered list of Line objects as obtained from the lexer, and parses their contents to produce an abstract
+    syntax map of line numbers to SyntaxNodes on the line, representing the type and relationships of the yaml elements
     """
     level_parents = {}
     nodes = []
-    for line in lines:
+    for line_number, line in enumerate(lines):
         level = line.level
         # Keep track of what we have already seen on this line
         line_has_dict = False
@@ -24,12 +24,13 @@ def parse_line_tokens(lines):
                     break
                 elif token_type == 'Scalar':
                     # If this line already has a scalar and no nested structures, add this one as a child
+                    node = SyntaxNode(token.value, line_number)
                     if line_has_scalar and level == line.level:
-                        level_parents[level].add_child(SyntaxNode(token.value))
+                        level_parents[level].add_child(node)
                     else:
-                        level_parents[level] = SyntaxNode(token.value)
+                        level_parents[level] = node
                         if level == 0:
-                            nodes.append(level_parents[level])
+                            nodes.append(node)
                         else:
                             level_parents[level - 1].add_child(level_parents[level])
                     line_has_scalar = True

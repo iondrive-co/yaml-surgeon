@@ -33,11 +33,11 @@ class NodeExecutor:
     def __init__(self, node_selector, lexed_lines):
         self.node_selector = node_selector
         self.lexed_lines = lexed_lines
-        self.copy_to = None
+        self.rename_to = None
         self.do_delete = False
 
-    def copy(self, new_name):
-        self.copy_to = new_name
+    def rename(self, new_name):
+        self.rename_to = new_name
         return self
 
     def delete(self):
@@ -46,12 +46,12 @@ class NodeExecutor:
 
     def execute(self):
         selected_nodes = self.node_selector.select_on()
-        if self.copy_to is not None:
-            # TODO modify selected node content and setModified()
-            raise NotImplemented
+        if self.rename_to is not None:
+            for node in selected_nodes:
+                node.rename(self.rename_to)
         if self.do_delete is True:
-            # TODO remove selected node content and setModified()
-            raise NotImplemented
+            for node in selected_nodes:
+                node.rename("")
         return to_lines(selected_nodes, self.lexed_lines)
 
 
@@ -96,12 +96,17 @@ def create_line_number_map(syntax_nodes):
 def to_lines(nodes, lexed_lines):
     lines = []
     line_node_map = create_line_number_map(nodes)
-    for line_number, line in enumerate(lexed_lines):
-        if line_number in line_node_map and any(node.modified for node in line_node_map[line_number]):
-            # TODO add together the yaml line content
-            raise NotImplemented
-        else:
-            lines.append(line)
+    for line_number, lexed_line in enumerate(lexed_lines):
+        line = ''
+        for token in lexed_line.tokens:
+            value = token.value
+            for node in line_node_map.get(line_number, []):
+                # If this value has been modified (we also check for a matching value without the quotes)
+                if (node.name == value or node.name.strip('\"') == value) and node.renamed_to is not None:
+                    value = node.renamed_to
+                    break
+            line += value
+        lines.append(line)
     return lines
 
 
@@ -111,7 +116,7 @@ def main():
     parser.add_argument('--filePath', type=str, help='Path to the yaml file')
     parser.add_argument('--name', type=str, help='Name of the node to select')
     parser.add_argument('--childOf', type=str, help='Select only children of a node with this name')
-    parser.add_argument('--copy', type=str, help='Name for the copy operation')
+    parser.add_argument('--rename', type=str, help='What to rename the selected to')
     parser.add_argument('--delete', action='store_true', help='Delete the selected nodes')
 
     args = parser.parse_args()
@@ -126,11 +131,12 @@ def main():
     if args.childOf:
         selector.parent(args.childOf)
     executor = NodeExecutor(selector, lexed_lines)
-    if args.copy:
-        executor = executor.copy(args.copy)
+    if args.rename:
+        executor = executor.rename(args.rename)
     elif args.delete:
         executor = executor.delete()
-    print(executor.execute())
+    lines = executor.execute()
+    print("\n".join(lines))
 
 
 if __name__ == "__main__":

@@ -41,19 +41,25 @@ class SyntaxNode:
     def __init__(self, name, line_number):
         self.name = name
         self.line_number = line_number
+        self.modified = False
         self.children = []
 
     def add_child(self, child):
         self.children.append(child)
 
+    def set_modified(self):
+        self.modified = True
+
     def __eq__(self, other):
         if isinstance(other, SyntaxNode):
             return (self.name == other.name and
                     self.line_number == other.line_number and
+                    self.modified == other.modified and
                     self.children == other.children)
         return False
 
     def __repr__(self):
         return f"SyntaxNode(name='{self.name}', " \
                f"line_number='{self.line_number}', " \
+               f"modified='{self.modified}', " \
                f"children={self.children})"

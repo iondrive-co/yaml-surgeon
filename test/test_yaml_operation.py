@@ -1,7 +1,7 @@
 import unittest
 from yaml_lexer import scan_text
 from yaml_parser import parse_line_tokens
-from yaml_operation import find_children_of_node, NodeSelector, create_line_number_map
+from yaml_operation import find_children_of_node_called, NodeSelector, create_line_number_map
 from structures import SyntaxNode
 
 
@@ -19,12 +19,12 @@ class TestFindChildren(unittest.TestCase):
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
-        result = find_children_of_node(parsed_yaml, 'settings')
-        expected = [SyntaxNode('fast'), SyntaxNode('secure'), SyntaxNode('reliable'), SyntaxNode('scalable')]
+        result = find_children_of_node_called(parsed_yaml, 'settings')
+        expected = [SyntaxNode('fast', 2), SyntaxNode('secure', 2), SyntaxNode('reliable', 4), SyntaxNode('scalable', 4)]
         assert_syntax_nodes_equal(expected, result)
 
-        result_level = find_children_of_node(parsed_yaml, 'serverConfig', 0)
-        expected = [SyntaxNode('srv-100'), SyntaxNode('srv-200')]
+        result_level = find_children_of_node_called(parsed_yaml, 'serverConfig', 0)
+        expected = [SyntaxNode('srv-100', 1), SyntaxNode('srv-200', 3)]
         assert_syntax_nodes_equal(expected, result_level)
 
     def test_find_children_of_node_valid_list_nested_dict_yaml2(self):
@@ -32,12 +32,12 @@ class TestFindChildren(unittest.TestCase):
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
-        result = find_children_of_node(parsed_yaml, 'labels')
-        expected = [SyntaxNode('app'), SyntaxNode('steps')]
+        result = find_children_of_node_called(parsed_yaml, 'labels')
+        expected = [SyntaxNode('app', 5), SyntaxNode('steps', 6)]
         assert_syntax_nodes_equal(expected, result)
 
-        result_level = find_children_of_node(parsed_yaml, 'metadata', 0)
-        expected = [SyntaxNode('name'), SyntaxNode('labels')]
+        result_level = find_children_of_node_called(parsed_yaml, 'metadata', 0)
+        expected = [SyntaxNode('name', 3), SyntaxNode('labels', 4)]
         assert_syntax_nodes_equal(expected, result_level)
 
     def test_find_children_of_node_valid_list_nested_dict_yaml3(self):
@@ -45,12 +45,12 @@ class TestFindChildren(unittest.TestCase):
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
-        result = find_children_of_node(parsed_yaml, 'metadata')
-        expected = [SyntaxNode('build'), SyntaxNode('resources'), SyntaxNode('emptyLabel')]
+        result = find_children_of_node_called(parsed_yaml, 'metadata')
+        expected = [SyntaxNode('build', 5), SyntaxNode('resources', 6), SyntaxNode('emptyLabel', 8)]
         assert_syntax_nodes_equal(expected, result)
 
-        result_level = find_children_of_node(parsed_yaml, 'kind', 0)
-        expected = [SyntaxNode('Pod')]
+        result_level = find_children_of_node_called(parsed_yaml, 'kind', 0)
+        expected = [SyntaxNode('Pod', 2)]
         assert_syntax_nodes_equal(expected, result_level)
 
 
@@ -58,21 +58,6 @@ def assert_syntax_nodes_equal(expected, actual):
     assert len(expected) == len(actual), f"Expected {len(expected)} nodes, found {len(actual)} nodes"
     for exp_node, act_node in zip(expected, actual):
         assert exp_node.name == act_node.name, f"Expected node name '{exp_node.name}', found '{act_node.name}'"
-
-
-def create_test_tree():
-    root = SyntaxNode('root')
-    child1 = SyntaxNode('child1')
-    child2 = SyntaxNode('child2')
-    grandchild1 = SyntaxNode('grandchild1')
-    grandchild2 = SyntaxNode('grandchild2')
-
-    root.add_child(child1)
-    root.add_child(child2)
-    child1.add_child(grandchild1)
-    child2.add_child(grandchild2)
-
-    return [root, child1, child2]
 
 
 class TestNodeSelector(unittest.TestCase):

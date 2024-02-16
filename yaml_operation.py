@@ -58,7 +58,7 @@ class NodeExecutor:
 def find_nodes_called(nodes, name):
     result = []
     for node in nodes:
-        if node.name == name:
+        if node.name == name or node.name.strip('\"') == name:
             result.append(node)
         result.extend(find_nodes_called(node.children, name))
     return result
@@ -102,7 +102,7 @@ def to_lines(nodes, lexed_lines):
             value = token.value
             for node in line_node_map.get(line_number, []):
                 # If this value has been modified (we also check for a matching value without the quotes)
-                if (node.name == value or node.name.strip('\"') == value) and node.renamed_to is not None:
+                if node.name == value and node.renamed_to is not None:
                     value = node.renamed_to
                     break
             line += value

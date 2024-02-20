@@ -1,7 +1,7 @@
 import argparse
 from yaml_surgeon.yaml_lexer import scan_text
 from yaml_surgeon.yaml_parser import parse_line_tokens
-from yaml_surgeon.yaml_operation import NodeSelector, NodeExecutor
+from yaml_surgeon.yaml_operation import YamlOperation
 
 
 def main():
@@ -19,17 +19,16 @@ def main():
         text = file.read()
     lexed_lines = scan_text(text)
     parsed_yaml = parse_line_tokens(lexed_lines)
-    selector = NodeSelector(parsed_yaml)
+    operation = YamlOperation(parsed_yaml, lexed_lines)
     if args.name:
-        selector.named(args.name)
+        operation.named(args.name)
     if args.childOf:
-        selector.parent(args.childOf)
-    executor = NodeExecutor(selector, lexed_lines)
+        operation.parent(args.childOf)
     if args.rename:
-        executor = executor.rename(args.rename)
+        operation.rename(args.rename)
     elif args.delete:
-        executor = executor.delete()
-    lines = executor.execute()
+        operation.delete()
+    lines = operation.execute()
     print("\n".join(lines))
 
 

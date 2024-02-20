@@ -1,55 +1,57 @@
 from collections import defaultdict
 
 
-class NodeSelector:
+class YamlOperation:
 
-    def __init__(self, nodes):
-        self.name = None
-        self.parent_name = None
+    def __init__(self, nodes, lexed_lines):
         self.nodes = nodes
+        self.lexed_lines = lexed_lines
+        self.operations = []
+        self.selected_nodes = None
 
     def named(self, name):
-        self.name = name
+        self.operations.append(('named', name))
         return self
 
     def parent(self, parent_name):
-        self.parent_name = parent_name
+        self.operations.append(('parent', parent_name))
         return self
 
-    def select_on(self):
-        if self.parent_name is not None:
-            selected_nodes = find_children_of_node_called(self.nodes, self.parent_name)
-        else:
-            selected_nodes = self.nodes
-        if self.name is not None:
-            selected_nodes = find_nodes_called(selected_nodes, self.name)
-        return selected_nodes
-
-
-class NodeExecutor:
-    def __init__(self, node_selector, lexed_lines):
-        self.node_selector = node_selector
-        self.lexed_lines = lexed_lines
-        self.rename_to = None
-        self.do_delete = False
-
     def rename(self, new_name):
-        self.rename_to = new_name
+        self.operations.append(('rename', new_name))
         return self
 
     def delete(self):
-        self.do_delete = True
+        self.operations.append(('delete',))
         return self
 
+    def get_selected_nodes(self):
+        if self.selected_nodes is None:
+            self._apply_selections()
+        return self.selected_nodes
+
     def execute(self):
-        selected_nodes = self.node_selector.select_on()
-        if self.rename_to is not None:
-            for node in selected_nodes:
-                node.rename(self.rename_to)
-        if self.do_delete is True:
-            for node in selected_nodes:
-                node.rename("")
-        return to_lines(selected_nodes, self.lexed_lines)
+        if self.selected_nodes is None:
+            self._apply_selections()
+
+        for op, *args in self.operations:
+            if op == 'rename':
+                for node in self.selected_nodes:
+                    node.rename(args[0])
+            elif op == 'delete':
+                for node in self.selected_nodes:
+                    node.rename("")
+
+        return to_lines(self.selected_nodes, self.lexed_lines)
+
+    def _apply_selections(self):
+        self.selected_nodes = self.nodes
+        for op, *args in self.operations:
+            if op == 'parent':
+                self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0])
+        for op, *args in self.operations:
+            if op == 'named':
+                self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])
 
 
 def find_nodes_called(nodes, name):

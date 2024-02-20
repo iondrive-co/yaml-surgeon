@@ -1,4 +1,4 @@
-from structures import Line, Token
+from yaml_surgeon.structures import Line, Token
 
 
 class AlphaSpansStateMachine:
@@ -20,21 +20,23 @@ class AlphaSpansStateMachine:
                 self._end_span()
                 self.state = 'Alpha'
                 self.span_types.append('Scalar')
-                self.current_span += char
             elif char in "'\"":
-                self.start_quote = char
                 self._end_span()
+                self.start_quote = char
                 self.state = 'Quoted Alpha'
                 self.span_types.append('Scalar')
-                self.current_span += char
             else:
                 if char in '-[':
                     self.span_types.append('List')
                 elif char in ':{':
                     self.span_types.append('Dict')
                 elif char == '#':
+                    self._end_span()
+                    # Treat this as a quoted alpha with no start, meaning take everything until the end of the line
+                    self.start_quote = None
+                    self.state = 'Quoted Alpha'
                     self.span_types.append('Comment')
-                self.current_span += char
+            self.current_span += char
         elif self.state == 'Alpha':
             if char in self.terminating_chars:
                 self._end_span()
@@ -42,6 +44,8 @@ class AlphaSpansStateMachine:
                 if char == ':':
                     self.span_types.append('Dict')
                 elif char == '#':
+                    self.start_quote = None
+                    self.state = 'Quoted Alpha'
                     self.span_types.append('Comment')
                 self.current_span += char
             elif char.isalnum():
@@ -56,6 +60,8 @@ class AlphaSpansStateMachine:
                 if char == ':':
                     self.span_types.append('Dict')
                 elif char == '#':
+                    self.start_quote = None
+                    self.state = 'Quoted Alpha'
                     self.span_types.append('Comment')
                 self.current_span += self.lookahead_span
                 self.lookahead_span = ''

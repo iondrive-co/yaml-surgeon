@@ -1,4 +1,4 @@
-from structures import SyntaxNode
+from yaml_surgeon.structures import SyntaxNode
 
 
 def parse_line_tokens(lines):

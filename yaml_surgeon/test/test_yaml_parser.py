@@ -1,20 +1,19 @@
 import unittest
-from yaml_lexer import scan_text
-from yaml_parser import parse_line_tokens
-from structures import SyntaxNode
+from yaml_surgeon.yaml_lexer import scan_text
+from yaml_surgeon.yaml_parser import parse_line_tokens
+from yaml_surgeon.structures import SyntaxNode
 
 
 class TestParseYaml(unittest.TestCase):
 
     @staticmethod
-    def load_yaml_samples(file_path):
-        with open(file_path, 'r') as file:
+    def load_yaml_sample(file_name):
+        with open("../samples/" + file_name, 'r') as file:
             text = file.read()
-        samples = text.split('[yaml')
-        return {f"yaml{i}": sample.split(']', 1)[1].strip() for i, sample in enumerate(samples) if sample.strip()}
+        return text
 
     def test_parse_valid_list_nested_dict(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml1"]
+        yaml_content = self.load_yaml_sample("valid1.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
@@ -47,7 +46,7 @@ class TestParseYaml(unittest.TestCase):
         self.assertEqual(expected, parsed_yaml)
 
     def test_parse_valid_list_nested_dict_yaml2(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml2"]
+        yaml_content = self.load_yaml_sample("valid2.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
@@ -77,7 +76,7 @@ class TestParseYaml(unittest.TestCase):
         self.assertEqual(expected, parsed_yaml)
 
     def test_parse_valid_list_nested_dict_yaml3(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml3"]
+        yaml_content = self.load_yaml_sample("valid3.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 

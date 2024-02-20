@@ -1,0 +1,9 @@
+- serverConfig:
+    - srv-100:
+        settings: [fast, secure]
+    - srv-200:
+        settings: [reliable, scalable]
+        backup_to: storageUnit
+- database:
+    - srv-300
+- webApp

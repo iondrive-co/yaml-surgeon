@@ -1,6 +1,6 @@
 import unittest
-from yaml_lexer import scan_text, AlphaSpansStateMachine
-from structures import Line, Token
+from yaml_surgeon.yaml_lexer import scan_text, AlphaSpansStateMachine
+from yaml_surgeon.structures import Line, Token
 
 
 class TestYamlLineSplitting(unittest.TestCase):
@@ -85,14 +85,13 @@ class TestYamlLineSplitting(unittest.TestCase):
 class TestLexYaml(unittest.TestCase):
 
     @staticmethod
-    def load_yaml_samples(file_path):
-        with open(file_path, 'r') as file:
+    def load_yaml_sample(file_name):
+        with open("../samples/" + file_name, 'r') as file:
             text = file.read()
-        samples = text.split('[yaml')
-        return {f"yaml{i}": sample.split(']', 1)[1].strip() for i, sample in enumerate(samples) if sample.strip()}
+        return text
 
     def test_lex_valid_list_nested_dict(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml1"]
+        yaml_content = self.load_yaml_sample("valid1.yaml")
         parsed_yaml = scan_text(yaml_content)
         expected = [
             Line(tokens=[
@@ -153,7 +152,7 @@ class TestLexYaml(unittest.TestCase):
         self.assertEqual(yaml_content.strip(), reconstructed.strip())
 
     def test_lex_valid_dict_nested_list(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml2"]
+        yaml_content = self.load_yaml_sample("valid2.yaml")
         parsed_yaml = scan_text(yaml_content)
         expected = [
             Line(tokens=[
@@ -213,30 +212,28 @@ class TestLexYaml(unittest.TestCase):
         self.assertEqual(yaml_content.strip(), reconstructed.strip())
 
     def test_lex_valid_awkward_comments_and_spaces(self):
-        yaml_content = self.load_yaml_samples("valid_yaml_samples.txt")["yaml3"]
+        yaml_content = self.load_yaml_sample("valid3.yaml")
         parsed_yaml = scan_text(yaml_content)
         expected = [
             Line(tokens=[
                 Token(value='...', types=[])
             ], line_number=1, level=0),
             Line(tokens=[
-                Token(value='# ', types=['Comment']),
-                Token(value='Document start', types=['Scalar'])
+                Token(value='# Document start', types=['Comment']),
             ], line_number=2, level=0),
             Line(tokens=[
                 Token(value='kind', types=['Scalar']),
                 Token(value=': ', types=['Dict']),
                 Token(value='Pod', types=['Scalar']),
-                Token(value=' # ', types=['Comment']),
-                Token(value='Comment at line end', types=['Scalar'])
+                Token(value=' # Comment at line end', types=['Comment']),
             ], line_number=3, level=0),
             Line(tokens=[
                 Token(value='metadata', types=['Scalar']),
                 Token(value=':', types=['Dict'])
             ], line_number=4, level=0),
             Line(tokens=[
-                Token(value='  # ', types=['Comment']),
-                Token(value='A comment line', types=['Scalar'])
+                Token(value='  ', types=[]),
+                Token(value='# A common comment', types=['Comment']),
             ], line_number=5, level=1),
             Line(tokens=[
                 Token(value='  ', types=[]),
@@ -250,8 +247,8 @@ class TestLexYaml(unittest.TestCase):
                 Token(value=':', types=['Dict'])
             ], line_number=7, level=1),
             Line(tokens=[
-                Token(value='    # ', types=['Comment']),
-                Token(value='Nothing here but a comment', types=['Scalar'])
+                Token(value='    ', types=[]),
+                Token(value="# No resources, but have another comment, it's only wafer-thin", types=['Comment'])
             ], line_number=8, level=2),
             Line(tokens=[
                 Token(value='  ', types=[]),

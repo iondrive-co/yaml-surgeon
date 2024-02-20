@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: apache-pod
+ labels:
+   app: web
+   steps:
+     - uses: actions/checkout@v2
+     - name: Set up Python
+...

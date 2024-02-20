@@ -1,0 +1,9 @@
+...
+# Document start
+kind: Pod # Comment at line end
+metadata:
+  # A common comment
+  build: "2020-01-01"
+  resources:
+    # No resources, but have another comment, it's only wafer-thin
+  emptyLabel: {}

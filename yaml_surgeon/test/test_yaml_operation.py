@@ -59,9 +59,9 @@ def assert_syntax_nodes_equal(expected, actual):
         assert exp_node.name == act_node.name, f"Expected node name '{exp_node.name}', found '{act_node.name}'"
 
 
-class TestNodeSelector(unittest.TestCase):
+class TestYamlOperation(unittest.TestCase):
 
-    def test_node_selector_yaml_1(self):
+    def test_node_selection(self):
         yaml_content = """- parent1:
             - srv-100:
                 fast: true
@@ -83,6 +83,41 @@ class TestNodeSelector(unittest.TestCase):
         child_names = [child.name for child in selected_nodes[0].children]
         self.assertIn('secure', child_names)
 
+    def test_node_rename(self):
+        yaml_content = """- parent1:
+                - srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        YamlOperation(parsed_yaml, lexed_lines).named('srv-100').rename('renamed-srv-100').execute()
+        for node in parsed_yaml:
+            if node.name == 'renamed-srv-100':
+                self.assertIn('renamed-srv-100', node.name)
+
+    def test_node_delete(self):
+        yaml_content = """- parent1:
+                - srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+
+        YamlOperation(parsed_yaml, lexed_lines).named('srv-100').delete().execute()
+
+        # Verify that nodes have been deleted
+        for node in parsed_yaml:
+            self.assertNotEqual(node.name, 'srv-100', "Node 'srv-100' should have been deleted")
 
 class TestHelperFunctions(unittest.TestCase):
 

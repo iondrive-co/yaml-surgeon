@@ -1,11 +1,17 @@
 from collections import defaultdict
+from yaml_surgeon.yaml_lexer import scan_text
+from yaml_surgeon.yaml_parser import parse_line_tokens
 
 
 class YamlOperation:
 
-    def __init__(self, nodes, lexed_lines):
-        self.nodes = nodes
-        self.lexed_lines = lexed_lines
+    def __init__(self, nodes_or_yaml, lexed_lines=None):
+        if isinstance(nodes_or_yaml, str):
+            self.lexed_lines = scan_text(nodes_or_yaml)
+            self.nodes = parse_line_tokens(self.lexed_lines)
+        else:
+            self.nodes = nodes_or_yaml
+            self.lexed_lines = lexed_lines
         self.operations = []
         self.selected_nodes = None
 

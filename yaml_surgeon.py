@@ -17,9 +17,7 @@ def main():
     print(f"Opening {args.filePath}")
     with open(args.filePath, 'r') as file:
         text = file.read()
-    lexed_lines = scan_text(text)
-    parsed_yaml = parse_line_tokens(lexed_lines)
-    operation = YamlOperation(parsed_yaml, lexed_lines)
+    operation = YamlOperation(text)
     if args.name:
         operation.named(args.name)
     if args.childOf:

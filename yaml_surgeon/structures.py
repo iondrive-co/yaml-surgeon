@@ -49,6 +49,15 @@ class SyntaxNode:
 
     def rename(self, renamed_to):
         self.renamed_to = renamed_to
+        return self
+
+    def deep_copy(self):
+        copied_node = SyntaxNode(self.name, self.line_number)
+        copied_node.renamed_to = self.renamed_to
+        for child in self.children:
+            copied_child = child.deep_copy()
+            copied_node.add_child(copied_child)
+        return copied_node
 
     def __eq__(self, other):
         if isinstance(other, SyntaxNode):

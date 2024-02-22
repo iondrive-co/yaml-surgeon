@@ -31,15 +31,17 @@ class YamlOperation:
         self.operations.append(('delete',))
         return self
 
+    def duplicate(self, name):
+        self.operations.append(('duplicate', name))
+        return self
+
     def get_selected_nodes(self):
         if self.selected_nodes is None:
             self._apply_selections()
         return self.selected_nodes
 
     def execute(self):
-        if self.selected_nodes is None:
-            self._apply_selections()
-
+        self.get_selected_nodes()
         for op, *args in self.operations:
             if op == 'rename':
                 for node in self.selected_nodes:
@@ -47,7 +49,10 @@ class YamlOperation:
             elif op == 'delete':
                 for node in self.selected_nodes:
                     node.rename("")
-
+            if op == 'duplicate':
+                for index, node in enumerate(list(self.selected_nodes)):
+                    self.selected_nodes.insert(index + 1, node.deep_copy().rename(args[0]))
+        #TODO for duplicate to work, we need to insert another lexed_line as well as the node
         return to_lines(self.selected_nodes, self.lexed_lines)
 
     def _apply_selections(self):
@@ -58,6 +63,12 @@ class YamlOperation:
         for op, *args in self.operations:
             if op == 'named':
                 self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])
+
+    def _duplicate_node(self, name):
+        for i, node in enumerate(self.nodes):
+            if node.name == name:
+                self.nodes.insert(i + 1, node.deep_copy())
+                break
 
 
 def find_nodes_called(nodes, name):

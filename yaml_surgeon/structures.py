@@ -51,6 +51,10 @@ class SyntaxNode:
         self.renamed_to = renamed_to
         return self
 
+    def set_line_number(self, line_number):
+        self.line_number = line_number
+        return self
+
     def deep_copy(self):
         copied_node = SyntaxNode(self.name, self.line_number)
         copied_node.renamed_to = self.renamed_to

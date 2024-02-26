@@ -51,8 +51,13 @@ class YamlOperation:
                     node.rename("")
             if op == 'duplicate':
                 for index, node in enumerate(list(self.selected_nodes)):
-                    self.selected_nodes.insert(index + 1, node.deep_copy().rename(args[0]))
-        #TODO for duplicate to work, we need to insert another lexed_line as well as the node
+                    # Insert a new node with a rename operation
+                    self.selected_nodes.insert(index + 1, node.deep_copy().rename(args[0]).set_line_number(node.line_number + 1))
+                    # Move all the other lines down 1
+                    for i in range(index + 2, len(self.selected_nodes)):
+                        self.selected_nodes[i].line_number += 1
+                    # Copy everything else about the line verbatim
+                    self.lexed_lines.insert(node.line_number + 1, self.lexed_lines[node.line_number])
         return to_lines(self.selected_nodes, self.lexed_lines)
 
     def _apply_selections(self):
@@ -114,13 +119,13 @@ def to_lines(nodes, lexed_lines):
     line_node_map = create_line_number_map(nodes)
     for line_number, lexed_line in enumerate(lexed_lines):
         line = ''
-        for token in lexed_line.tokens:
-            value = token.value
+        for lexed_token in lexed_line.tokens:
+            lexed_value = lexed_token.value
             for node in line_node_map.get(line_number, []):
-                # If this value has been modified (we also check for a matching value without the quotes)
-                if node.name == value and node.renamed_to is not None:
-                    value = node.renamed_to
+                # If this value has been modified
+                if node.name == lexed_value and node.renamed_to is not None:
+                    lexed_value = node.renamed_to
                     break
-            line += value
+            line += lexed_value
         lines.append(line)
     return lines

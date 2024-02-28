@@ -51,13 +51,16 @@ class YamlOperation:
                     node.rename("")
             if op == 'duplicate':
                 for index, node in enumerate(list(self.selected_nodes)):
-                    # Insert a new node with a rename operation
-                    self.selected_nodes.insert(index + 1, node.deep_copy().rename(args[0]).set_line_number(node.line_number + 1))
-                    # Move all the other lines down 1
+                    shift_length = node.end_line_number - node.start_line_number + 1
+                    copied_node = node.deep_copy(node.end_line_number + 1).rename(args[0])
+                    self.selected_nodes.insert(index + 1, copied_node)
+                    # Move all the other lines down by the shift
                     for i in range(index + 2, len(self.selected_nodes)):
-                        self.selected_nodes[i].line_number += 1
-                    # Copy everything else about the line verbatim
-                    self.lexed_lines.insert(node.line_number + 1, self.lexed_lines[node.line_number])
+                        self.selected_nodes[i].start_line_number += shift_length
+                        self.selected_nodes[i].end_line_number += shift_length
+                    # Copy everything else about the lines verbatim
+                    for i in range(node.start_line_number, node.end_line_number + 1):
+                        self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
         return to_lines(self.selected_nodes, self.lexed_lines)
 
     def _apply_selections(self):
@@ -104,7 +107,7 @@ def create_line_number_map(syntax_nodes):
     line_map = defaultdict(list)
 
     def add_to_map(node):
-        line_map[node.line_number].append(node)
+        line_map[node.start_line_number].append(node)
         for child in node.children:
             add_to_map(child)
 

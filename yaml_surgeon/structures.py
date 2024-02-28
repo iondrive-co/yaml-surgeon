@@ -41,38 +41,40 @@ class SyntaxNode:
     def __init__(self, name, line_number):
         self.name = name
         self.renamed_to = None
-        self.line_number = line_number
+        self.start_line_number = line_number
+        self.end_line_number = line_number
         self.children = []
 
     def add_child(self, child):
         self.children.append(child)
+        self.end_line_number = max(self.end_line_number, child.end_line_number)
 
     def rename(self, renamed_to):
         self.renamed_to = renamed_to
         return self
 
-    def set_line_number(self, line_number):
-        self.line_number = line_number
-        return self
-
-    def deep_copy(self):
-        copied_node = SyntaxNode(self.name, self.line_number)
+    def deep_copy(self, insert_at_line):
+        # This copies the node to a position immediately under its last child
+        copied_node = SyntaxNode(self.name, insert_at_line)
         copied_node.renamed_to = self.renamed_to
         for child in self.children:
-            copied_child = child.deep_copy()
+            child_depth = child.start_line_number - self.start_line_number
+            copied_child = child.deep_copy(insert_at_line + child_depth)
             copied_node.add_child(copied_child)
         return copied_node
 
     def __eq__(self, other):
         if isinstance(other, SyntaxNode):
             return (self.name == other.name and
-                    self.line_number == other.line_number and
+                    self.start_line_number == other.start_line_number and
+                    self.end_line_number == other.end_line_number and
                     self.renamed_to == other.renamed_to and
                     self.children == other.children)
         return False
 
     def __repr__(self):
         return f"SyntaxNode(name='{self.name}', " \
-               f"line_number='{self.line_number}', " \
+               f"start_line_number='{self.start_line_number}', " \
+               f"end_line_number='{self.end_line_number}', " \
                f"renamed_to='{self.renamed_to}', " \
                f"children={self.children})"

@@ -63,6 +63,12 @@ class SyntaxNode:
             copied_node.add_child(copied_child)
         return copied_node
 
+    def shift(self, shift_amount):
+        self.start_line_number += shift_amount
+        self.end_line_number += shift_amount
+        for child in self.children:
+            child.shift(shift_amount)
+
     def __eq__(self, other):
         if isinstance(other, SyntaxNode):
             return (self.name == other.name and

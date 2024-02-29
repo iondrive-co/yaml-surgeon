@@ -144,6 +144,36 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")
 
+    def test_node_duplicate_multiple(self):
+        yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        output_yaml = YamlOperation(yaml_content).named('srv-100').duplicate("duplicate-srv-100").execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+                - duplicate-srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+                - duplicate-srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content with duplicates")
+
 
 class TestHelperFunctions(unittest.TestCase):
 

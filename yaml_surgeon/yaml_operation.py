@@ -50,14 +50,16 @@ class YamlOperation:
                 for node in self.selected_nodes:
                     node.rename("")
             if op == 'duplicate':
+                num_inserted = 0
                 for index, node in enumerate(list(self.selected_nodes)):
                     shift_length = node.end_line_number - node.start_line_number + 1
                     copied_node = node.deep_copy(node.end_line_number + 1).rename(args[0])
-                    self.selected_nodes.insert(index + 1, copied_node)
-                    # Move all the other lines down by the shift
-                    for i in range(index + 2, len(self.selected_nodes)):
-                        self.selected_nodes[i].start_line_number += shift_length
-                        self.selected_nodes[i].end_line_number += shift_length
+                    insert_pos = index + 1 + num_inserted
+                    self.selected_nodes.insert(insert_pos, copied_node)
+                    num_inserted += 1
+                    # Move all the other selections down by the shift
+                    for i in range(insert_pos + 1, len(self.selected_nodes)):
+                        self.selected_nodes[i].shift(shift_length)
                     # Copy everything else about the lines verbatim
                     for i in range(node.start_line_number, node.end_line_number + 1):
                         self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])

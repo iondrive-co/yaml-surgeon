@@ -29,7 +29,7 @@ def parse_line_tokens(lines):
                         level_parents[level].add_child(node)
                     else:
                         level_parents[level] = node
-                        if level == 0:
+                        if level == 0 or level - 1 not in level_parents:
                             nodes.append(node)
                         else:
                             level_parents[level - 1].add_child(level_parents[level])

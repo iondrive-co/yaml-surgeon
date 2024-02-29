@@ -95,7 +95,7 @@ class TestYamlOperation(unittest.TestCase):
             - webApp"""
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
-        YamlOperation(parsed_yaml, lexed_lines).named('srv-100').rename('renamed-srv-100').execute()
+        YamlOperation(yaml_content).named('srv-100').rename('renamed-srv-100').execute()
         for node in parsed_yaml:
             if node.name == 'renamed-srv-100':
                 self.assertIn('renamed-srv-100', node.name)
@@ -112,12 +112,68 @@ class TestYamlOperation(unittest.TestCase):
             - webApp"""
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
-
         YamlOperation(parsed_yaml, lexed_lines).named('srv-100').delete().execute()
-
-        # Verify that nodes have been deleted
         for node in parsed_yaml:
             self.assertNotEqual(node.name, 'srv-100', "Node 'srv-100' should have been deleted")
+
+    def test_node_duplicate_single(self):
+        yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        output_yaml = YamlOperation(yaml_content).named('srv-100').parent("parent1").duplicate("duplicate-srv-100").execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+                - duplicate-srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content with duplicates")
+
+    def test_node_duplicate_multiple(self):
+        yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        output_yaml = YamlOperation(yaml_content).named('srv-100').duplicate("duplicate-srv-100").execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+                - duplicate-srv-100:
+                    fast: true
+            - parent2:
+                - srv-100:
+                    secure: true
+                - duplicate-srv-100:
+                    secure: true
+            - database:
+                - srv-300
+            - webApp"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content with duplicates")
+
 
 class TestHelperFunctions(unittest.TestCase):
 

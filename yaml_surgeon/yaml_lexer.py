@@ -100,7 +100,7 @@ class AlphaSpansStateMachine:
 
     def parse(self, text):
         if not text:
-            return [""]
+            return [Token('', [])]
         for char in text:
             self.process(char)
         # Handle any remaining span when the end of the text is reached

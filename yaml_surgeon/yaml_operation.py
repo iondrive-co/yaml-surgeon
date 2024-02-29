@@ -31,15 +31,17 @@ class YamlOperation:
         self.operations.append(('delete',))
         return self
 
+    def duplicate(self, name):
+        self.operations.append(('duplicate', name))
+        return self
+
     def get_selected_nodes(self):
         if self.selected_nodes is None:
             self._apply_selections()
         return self.selected_nodes
 
     def execute(self):
-        if self.selected_nodes is None:
-            self._apply_selections()
-
+        self.get_selected_nodes()
         for op, *args in self.operations:
             if op == 'rename':
                 for node in self.selected_nodes:
@@ -47,7 +49,20 @@ class YamlOperation:
             elif op == 'delete':
                 for node in self.selected_nodes:
                     node.rename("")
-
+            if op == 'duplicate':
+                num_inserted = 0
+                for index, node in enumerate(list(self.selected_nodes)):
+                    shift_length = node.end_line_number - node.start_line_number + 1
+                    copied_node = node.deep_copy(node.end_line_number + 1).rename(args[0])
+                    insert_pos = index + 1 + num_inserted
+                    self.selected_nodes.insert(insert_pos, copied_node)
+                    num_inserted += 1
+                    # Move all the other selections down by the shift
+                    for i in range(insert_pos + 1, len(self.selected_nodes)):
+                        self.selected_nodes[i].shift(shift_length)
+                    # Copy everything else about the lines verbatim
+                    for i in range(node.start_line_number, node.end_line_number + 1):
+                        self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
         return to_lines(self.selected_nodes, self.lexed_lines)
 
     def _apply_selections(self):
@@ -58,6 +73,12 @@ class YamlOperation:
         for op, *args in self.operations:
             if op == 'named':
                 self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])
+
+    def _duplicate_node(self, name):
+        for i, node in enumerate(self.nodes):
+            if node.name == name:
+                self.nodes.insert(i + 1, node.deep_copy())
+                break
 
 
 def find_nodes_called(nodes, name):
@@ -88,7 +109,7 @@ def create_line_number_map(syntax_nodes):
     line_map = defaultdict(list)
 
     def add_to_map(node):
-        line_map[node.line_number].append(node)
+        line_map[node.start_line_number].append(node)
         for child in node.children:
             add_to_map(child)
 
@@ -103,13 +124,13 @@ def to_lines(nodes, lexed_lines):
     line_node_map = create_line_number_map(nodes)
     for line_number, lexed_line in enumerate(lexed_lines):
         line = ''
-        for token in lexed_line.tokens:
-            value = token.value
+        for lexed_token in lexed_line.tokens:
+            lexed_value = lexed_token.value
             for node in line_node_map.get(line_number, []):
-                # If this value has been modified (we also check for a matching value without the quotes)
-                if node.name == value and node.renamed_to is not None:
-                    value = node.renamed_to
+                # If this value has been modified
+                if node.name == lexed_value and node.renamed_to is not None:
+                    lexed_value = node.renamed_to
                     break
-            line += value
+            line += lexed_value
         lines.append(line)
     return lines

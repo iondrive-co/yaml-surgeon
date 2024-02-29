@@ -174,6 +174,33 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")
 
+    def test_node_duplicate_more_types(self):
+        yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [egg, spam]
+            - sausage:
+                - bacon: [egg, spam]
+                - beans: {spam: spam}"""
+        output_yaml = YamlOperation(yaml_content).parent('spam').named('bacon').duplicate('spam').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [egg, spam]
+                - spam: [egg, spam]
+            - sausage:
+                - bacon: [egg, spam]
+                - beans: {spam: spam}"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content with duplicates")
+
 
 class TestHelperFunctions(unittest.TestCase):
 

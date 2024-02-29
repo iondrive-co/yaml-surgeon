@@ -77,7 +77,7 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(len(selected_nodes), 2)
         self.assertEqual(selected_nodes[0].name, 'srv-100', 'srv-100')
 
-        selected_nodes = YamlOperation(parsed_yaml, lexed_lines).named('srv-100').parent('parent2').get_selected_nodes()
+        selected_nodes = YamlOperation(parsed_yaml, lexed_lines).named('srv-100').with_parent('parent2').get_selected_nodes()
         self.assertEqual(len(selected_nodes), 1)
         self.assertEqual(selected_nodes[0].name, 'srv-100')
         child_names = [child.name for child in selected_nodes[0].children]
@@ -127,7 +127,7 @@ class TestYamlOperation(unittest.TestCase):
             - database:
                 - srv-300
             - webApp"""
-        output_yaml = YamlOperation(yaml_content).named('srv-100').parent("parent1").duplicate("duplicate-srv-100").execute()
+        output_yaml = YamlOperation(yaml_content).named('srv-100').with_parent("parent1").duplicate_as("duplicate-srv-100").execute()
         output_yaml_string = "\n".join(output_yaml)
         expected_yaml_content = """
             - parent1:
@@ -155,7 +155,7 @@ class TestYamlOperation(unittest.TestCase):
             - database:
                 - srv-300
             - webApp"""
-        output_yaml = YamlOperation(yaml_content).named('srv-100').duplicate("duplicate-srv-100").execute()
+        output_yaml = YamlOperation(yaml_content).named('srv-100').duplicate_as("duplicate-srv-100").execute()
         output_yaml_string = "\n".join(output_yaml)
         expected_yaml_content = """
             - parent1:
@@ -185,7 +185,7 @@ class TestYamlOperation(unittest.TestCase):
             - sausage:
                 - bacon: [egg, spam]
                 - beans: {spam: spam}"""
-        output_yaml = YamlOperation(yaml_content).parent('spam').named('bacon').duplicate('spam').execute()
+        output_yaml = YamlOperation(yaml_content).named('bacon').with_parent('spam').duplicate_as('spam').execute()
         output_yaml_string = "\n".join(output_yaml)
         expected_yaml_content = """
             - spam:

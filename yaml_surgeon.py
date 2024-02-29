@@ -22,9 +22,9 @@ def main():
     if args.name:
         operation.named(args.name)
     if args.childOf:
-        operation.parent(args.childOf)
+        operation.with_parent(args.childOf)
     if args.duplicate:
-        operation.duplicate(args.duplicate)
+        operation.duplicate_as(args.duplicate)
     if args.rename:
         operation.rename(args.rename)
     elif args.delete:

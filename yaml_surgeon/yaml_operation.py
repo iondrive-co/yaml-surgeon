@@ -19,7 +19,7 @@ class YamlOperation:
         self.operations.append(('named', name))
         return self
 
-    def parent(self, parent_name):
+    def with_parent(self, parent_name):
         self.operations.append(('parent', parent_name))
         return self
 
@@ -31,7 +31,7 @@ class YamlOperation:
         self.operations.append(('delete',))
         return self
 
-    def duplicate(self, name):
+    def duplicate_as(self, name):
         self.operations.append(('duplicate', name))
         return self
 

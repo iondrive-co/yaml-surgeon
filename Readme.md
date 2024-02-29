@@ -1,7 +1,7 @@
 Surgical editing of yaml documents in python or from the command line, preserving flow style and making no unnecessary 
 changes to the remainder of the steam. For example:
 ```
-yaml_content = """
+yaml = """
     - spam:
         - egg: true
         - ham:
@@ -14,8 +14,8 @@ yaml_content = """
 ```
 could be edited with:
 ```
-output_yaml = YamlOperation(yaml_content).parent('spam').named('bacon').duplicate('spam').execute()
-print("\n".join(output_yaml))
+output = YamlOperation(yaml).named('bacon').with_parent('spam').duplicate_as('spam').execute()
+print("\n".join(output))
 ```
 which gives
 ```
@@ -24,6 +24,7 @@ which gives
         - ham:
             # Lovely 
             - spam
+        - bacon: [egg, spam]
         - spam: [egg, spam]
     - sausage:
         - bacon: [egg, spam]

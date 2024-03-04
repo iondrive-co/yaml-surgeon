@@ -1,5 +1,5 @@
 from collections import defaultdict
-from yaml_surgeon.yaml_lexer import scan_text
+from yaml_surgeon.yaml_lexer import scan_text, scan_lines
 from yaml_surgeon.yaml_parser import parse_line_tokens
 
 
@@ -64,6 +64,14 @@ class YamlOperation:
                     for i in range(node.start_line_number, node.end_line_number + 1):
                         self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
         return to_lines(self.selected_nodes, self.lexed_lines)
+
+    def then(self):
+        # Update the state with the current operations, and reset selectors for another set of operations
+        self.lexed_lines = scan_lines(self.execute())
+        self.nodes = parse_line_tokens(self.lexed_lines)
+        self.selected_nodes = None
+        self.operations = []
+        return self
 
     def _apply_selections(self):
         self.selected_nodes = self.nodes

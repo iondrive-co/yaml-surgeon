@@ -127,6 +127,10 @@ def scan_text(text):
     lines = text.splitlines()
     if not lines:
         return []
+    return scan_lines(lines)
+
+
+def scan_lines(lines):
     yaml_lines = []
     nesting_level = 0
     previous_indent = len(lines[0]) - len(lines[0].lstrip())
@@ -148,5 +152,3 @@ def scan_text(text):
         yaml_lines.append(Line(line_elements, line_number + 1, nesting_level))
         previous_indent = current_indent
     return yaml_lines
-
-

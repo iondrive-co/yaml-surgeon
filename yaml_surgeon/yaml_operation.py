@@ -29,7 +29,7 @@ class YamlOperation:
         return self
 
     def delete(self):
-        self.operation = ('delete',)
+        self.operation = ('delete', None)
         return self
 
     def duplicate_as(self, name):

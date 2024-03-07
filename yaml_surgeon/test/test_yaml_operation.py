@@ -116,6 +116,33 @@ class TestYamlOperation(unittest.TestCase):
         for node in parsed_yaml:
             self.assertNotEqual(node.name, 'srv-100', "Node 'srv-100' should have been deleted")
 
+    def test_node_delete_flow(self):
+        yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [egg, spam]
+            - sausage:
+                - bacon: [egg, spam]
+                - beans: {spam: spam}"""
+        output_yaml = YamlOperation(yaml_content).named('egg').delete().execute()
+        output_yaml_string = "\n".join(output_yaml)
+        # TODO need to clean up the rest of the line with some logic
+        expected_yaml_content = """
+            - spam:
+                - : true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [, spam]
+            - sausage:
+                - bacon: [, spam]
+                - beans: {spam: spam}"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content with duplicates")
+
     def test_node_duplicate_single(self):
         yaml_content = """
             - parent1:

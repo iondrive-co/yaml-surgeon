@@ -38,12 +38,13 @@ class Line:
 
 
 class SyntaxNode:
-    def __init__(self, name, line_number):
+    def __init__(self, name, line_number, flow_style=False):
         self.name = name
         self.renamed_to = None
         self.start_line_number = line_number
         self.end_line_number = line_number
         self.children = []
+        self.flow_style = flow_style
 
     def add_child(self, child):
         self.children.append(child)
@@ -55,7 +56,7 @@ class SyntaxNode:
 
     def deep_copy(self, insert_at_line):
         # This copies the node to a position immediately under its last child
-        copied_node = SyntaxNode(self.name, insert_at_line)
+        copied_node = SyntaxNode(self.name, insert_at_line, self.flow_style)
         copied_node.renamed_to = self.renamed_to
         for child in self.children:
             child_depth = child.start_line_number - self.start_line_number
@@ -75,6 +76,7 @@ class SyntaxNode:
                     self.start_line_number == other.start_line_number and
                     self.end_line_number == other.end_line_number and
                     self.renamed_to == other.renamed_to and
+                    self.flow_style == other.flow_style and
                     self.children == other.children)
         return False
 
@@ -83,4 +85,5 @@ class SyntaxNode:
                f"start_line_number='{self.start_line_number}', " \
                f"end_line_number='{self.end_line_number}', " \
                f"renamed_to='{self.renamed_to}', " \
+               f"flow_style='{self.flow_style}', " \
                f"children={self.children})"

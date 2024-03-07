@@ -14,10 +14,13 @@ yaml = """
 ```
 could be edited with:
 ```
-output = YamlOperation(yaml).named('bacon').with_parent('spam').duplicate_as('spam').execute()
-print("\n".join(output))
+output = YamlOperation(yaml).named('bacon').with_parent('spam').duplicate_as('can').then()\
+                            .named('egg').with_parent('can').duplicate_as('spam').execute()
 ```
-which gives
+The first operation chain inserts a `- can: [egg, spam]` line under the line `- bacon: [egg, spam]` (the line was 
+duplicated), and the second operation inserts a new list entry called `spam` after egg in the duplicated line (the list
+entry was duplicated). Note the second operation is selecting on the yaml document modified by the first operation (the 
+`then` function chains the operations). Displaying the final output with `print("\n".join(output))` gives:
 ```
     - spam:
         - egg: true
@@ -25,7 +28,7 @@ which gives
             # Lovely 
             - spam
         - bacon: [egg, spam]
-        - spam: [egg, spam]
+        - can: [egg, spam, spam]
     - sausage:
         - bacon: [egg, spam]
         - beans: {spam: spam}

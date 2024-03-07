@@ -12,27 +12,28 @@ class YamlOperation:
         else:
             self.nodes = nodes_or_yaml
             self.lexed_lines = lexed_lines
-        self.operations = []
+        self.selections = []
+        self.operation = None
         self.selected_nodes = None
 
     def named(self, name):
-        self.operations.append(('named', name))
+        self.selections.append(('named', name))
         return self
 
     def with_parent(self, parent_name):
-        self.operations.append(('parent', parent_name))
+        self.selections.append(('parent', parent_name))
         return self
 
     def rename(self, new_name):
-        self.operations.append(('rename', new_name))
+        self.operation = ('rename', new_name)
         return self
 
     def delete(self):
-        self.operations.append(('delete',))
+        self.operation = ('delete',)
         return self
 
     def duplicate_as(self, name):
-        self.operations.append(('duplicate', name))
+        self.operation = ('duplicate', name)
         return self
 
     def get_selected_nodes(self):
@@ -42,18 +43,22 @@ class YamlOperation:
 
     def execute(self):
         self.get_selected_nodes()
-        for op, *args in self.operations:
-            if op == 'rename':
-                for node in self.selected_nodes:
-                    node.rename(args[0])
-            elif op == 'delete':
-                for node in self.selected_nodes:
-                    node.rename("")
-            if op == 'duplicate':
-                num_inserted = 0
-                for index, node in enumerate(list(self.selected_nodes)):
+        (op, arg) = self.operation
+        if op == 'rename':
+            for node in self.selected_nodes:
+                node.rename(arg)
+        elif op == 'delete':
+            for node in self.selected_nodes:
+                node.rename("")
+        elif op == 'duplicate':
+            num_inserted = 0
+            for index, node in enumerate(list(self.selected_nodes)):
+                if node.flow_style:
+                    node.rename(node.name + ", " + arg)
+                else:
                     shift_length = node.end_line_number - node.start_line_number + 1
-                    copied_node = node.deep_copy(node.end_line_number + 1).rename(args[0])
+                    # In this case we also duplicate the name so that copy matches on the duplicated line
+                    copied_node = node.deep_copy(node.end_line_number + 1).rename(arg)
                     insert_pos = index + 1 + num_inserted
                     self.selected_nodes.insert(insert_pos, copied_node)
                     num_inserted += 1
@@ -70,15 +75,16 @@ class YamlOperation:
         self.lexed_lines = scan_lines(self.execute())
         self.nodes = parse_line_tokens(self.lexed_lines)
         self.selected_nodes = None
-        self.operations = []
+        self.selections = []
+        self.operation = None
         return self
 
     def _apply_selections(self):
         self.selected_nodes = self.nodes
-        for op, *args in self.operations:
+        for op, *args in self.selections:
             if op == 'parent':
                 self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0])
-        for op, *args in self.operations:
+        for op, *args in self.selections:
             if op == 'named':
                 self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])
 

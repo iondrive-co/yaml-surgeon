@@ -23,8 +23,9 @@ def parse_line_tokens(lines):
                     line_has_comment = True
                     break
                 elif token_type == 'Scalar':
+                    # Treat this as a flow style scalar if we have already seen a dict on this line
+                    node = SyntaxNode(token.value, line_number, line_has_dict)
                     # If this line already has a scalar and no nested structures, add this one as a child
-                    node = SyntaxNode(token.value, line_number)
                     if line_has_scalar and level == line.level:
                         level_parents[level].add_child(node)
                     else:

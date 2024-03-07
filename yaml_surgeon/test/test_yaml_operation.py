@@ -213,7 +213,7 @@ class TestYamlOperation(unittest.TestCase):
                 - bacon: [egg, spam]
                 - beans: {spam: spam}"""
         output_yaml = YamlOperation(yaml_content).named('bacon').with_parent('spam').duplicate_as('can').then()\
-                                                 .named('can').with_parent('spam').rename('spam').execute()
+                                                 .named('egg').with_parent('can').duplicate_as('spam').execute()
         output_yaml_string = "\n".join(output_yaml)
         expected_yaml_content = """
             - spam:
@@ -222,7 +222,7 @@ class TestYamlOperation(unittest.TestCase):
                     # Lovely
                     - spam
                 - bacon: [egg, spam]
-                - spam: [egg, spam]
+                - can: [egg, spam, spam]
             - sausage:
                 - bacon: [egg, spam]
                 - beans: {spam: spam}"""

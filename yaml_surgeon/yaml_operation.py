@@ -43,13 +43,20 @@ class YamlOperation:
 
     def execute(self):
         self.get_selected_nodes()
+        lines_to_delete = []
+        flow_entries_to_delete = []
         (op, arg) = self.operation
         if op == 'rename':
             for node in self.selected_nodes:
                 node.rename(arg)
         elif op == 'delete':
             for node in self.selected_nodes:
-                node.rename("")
+                if node.flow_style:
+                    node.rename("")
+                    flow_entries_to_delete.append(node.name)
+                else:
+                    for line_number in range(node.start_line_number, node.end_line_number + 1, 1):
+                        lines_to_delete.append(line_number)
         elif op == 'duplicate':
             num_inserted = 0
             for index, node in enumerate(list(self.selected_nodes)):
@@ -68,7 +75,8 @@ class YamlOperation:
                     # Copy everything else about the lines verbatim
                     for i in range(node.start_line_number, node.end_line_number + 1):
                         self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
-        return to_lines(self.selected_nodes, self.lexed_lines)
+        line_node_map = create_line_number_map(self.selected_nodes)
+        return to_lines(line_node_map, self.lexed_lines, lines_to_delete, flow_entries_to_delete)
 
     def then(self):
         # Update the state with the current operations, and reset selectors for another set of operations
@@ -133,18 +141,26 @@ def create_line_number_map(syntax_nodes):
     return dict(sorted(line_map.items()))
 
 
-def to_lines(nodes, lexed_lines):
+def to_lines(line_node_map, lexed_lines, lines_to_delete, flow_entries_to_delete):
     lines = []
-    line_node_map = create_line_number_map(nodes)
     for line_number, lexed_line in enumerate(lexed_lines):
         line = ''
+        delete_next_connector = False
         for lexed_token in lexed_line.tokens:
-            lexed_value = lexed_token.value
-            for node in line_node_map.get(line_number, []):
-                # If this value has been modified
-                if node.name == lexed_value and node.renamed_to is not None:
-                    lexed_value = node.renamed_to
-                    break
+            if delete_next_connector and lexed_token.value.strip() == ",":
+                lexed_value = ''
+                delete_next_connector = False
+            else:
+                delete_next_connector = False
+                lexed_value = lexed_token.value
+                for node in line_node_map.get(line_number, []):
+                    # If this value has been modified
+                    if node.name == lexed_value and node.renamed_to is not None:
+                        lexed_value = node.renamed_to
+                        if node.name in flow_entries_to_delete:
+                            delete_next_connector = True
+                        break
             line += lexed_value
-        lines.append(line)
+        if line_number not in lines_to_delete:
+            lines.append(line)
     return lines

@@ -129,16 +129,14 @@ class TestYamlOperation(unittest.TestCase):
                 - beans: {spam: spam}"""
         output_yaml = YamlOperation(yaml_content).named('egg').delete().execute()
         output_yaml_string = "\n".join(output_yaml)
-        # TODO need to clean up the rest of the line with some logic
         expected_yaml_content = """
             - spam:
-                - : true
                 - ham:
                     # Lovely
                     - spam
-                - bacon: [, spam]
+                - bacon: [spam]
             - sausage:
-                - bacon: [, spam]
+                - bacon: [spam]
                 - beans: {spam: spam}"""
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")

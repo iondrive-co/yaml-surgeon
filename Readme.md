@@ -17,11 +17,11 @@ could be edited with:
 output = YamlOperation(yaml).named('bacon').with_parent('spam').duplicate_as('can').then()\
                             .named('egg').with_parent('can').duplicate_as('spam').execute()
 ```
-The first operation inserts a `- can: [egg, spam]` line under the line selected with `.named('bacon').with_parent('spam')` 
-which is `- bacon: [egg, spam]`. We have thus duplicated the line and renamed the duplicates key. The second operation 
-inserts a new list entry called `spam` after the entry selected with `.named('egg').with_parent('can')` which is `egg`.
-We have thus duplicated an entry in new line, and renamed the duplicate entry. Note the second operation is selecting 
-on the yaml document modified by the first operation (the`then` function begins a new operation).
+The first operation inserts a `- can: [egg, spam]` line under `- bacon: [egg, spam]`, which is the line selected with 
+`.named('bacon').with_parent('spam')` (the `duplicate_as` parameter of `can` was used to name the duplicated key). 
+The second operation inserts a new list entry called `spam` after `egg`, which was the list entry selected with 
+`.named('egg').with_parent('can')`. Note the second operation is selecting on the yaml document modified by the first 
+operation (the `then` function begins a new operation).
 
 Displaying the final output with `print("\n".join(output))` gives:
 ```
@@ -37,7 +37,18 @@ Displaying the final output with `print("\n".join(output))` gives:
         - beans: {spam: spam}
 ```
 In this example each of the selections was chosen to match exactly one entry, but you can apply operations to multiple
-elements, for example you could `YamlOperation(yaml).named('egg').delete().execute()`
+elements, for example you could then do `YamlOperation(output).named('egg').delete().execute()` which would result in:
+```
+    - spam:
+        - ham:
+            # Lovely 
+            - spam
+        - bacon: [spam]
+        - can: [spam, spam]
+    - sausage:
+        - bacon: [spam]
+        - beans: {spam: spam}
+```
 
 You can use yaml surgeon to edit yaml files by passing in arguments to the main method (see the included PyCharm 
 [launcher](./.idea/runConfigurations/yaml_surgeon.xml)), or by importing 

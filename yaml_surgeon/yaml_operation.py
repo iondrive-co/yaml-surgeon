@@ -146,9 +146,17 @@ def to_lines(line_node_map, lexed_lines, lines_to_delete, flow_entries_to_delete
     for line_number, lexed_line in enumerate(lexed_lines):
         line = ''
         delete_next_connector = False
+        delete_next_symbol = False
         for lexed_token in lexed_line.tokens:
             if delete_next_connector and lexed_token.value.strip() == ",":
                 lexed_value = ''
+                delete_next_connector = False
+            elif delete_next_connector and lexed_token.value.strip() == ":":
+                lexed_value = ''
+                delete_next_symbol = True
+            elif delete_next_symbol:
+                lexed_value = ''
+                delete_next_symbol = False
                 delete_next_connector = False
             else:
                 delete_next_connector = False

@@ -48,7 +48,10 @@ class SyntaxNode:
 
     def add_child(self, child):
         self.children.append(child)
-        self.end_line_number = max(self.end_line_number, child.end_line_number)
+        self.extend_end(child.end_line_number)
+
+    def extend_end(self, new_end_line_number):
+        self.end_line_number = max(self.end_line_number, new_end_line_number)
 
     def rename(self, renamed_to):
         self.renamed_to = renamed_to

@@ -30,10 +30,15 @@ def parse_line_tokens(lines):
                         level_parents[level].add_child(node)
                     else:
                         level_parents[level] = node
-                        if level == 0 or level - 1 not in level_parents:
+                        prev_level = level - 1
+                        if level == 0 or prev_level not in level_parents:
                             nodes.append(node)
                         else:
-                            level_parents[level - 1].add_child(level_parents[level])
+                            level_parents[prev_level].add_child(level_parents[level])
+                            # Make sure all
+                            while prev_level in level_parents:
+                                level_parents[prev_level].extend_end(level_parents[level].end_line_number)
+                                prev_level = prev_level - 1
                     line_has_scalar = True
                 elif token_type == 'Dict':
                     if line_has_dict:

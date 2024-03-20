@@ -8,7 +8,7 @@ class TestYamlLineSplitting(unittest.TestCase):
 
     def test_empty_line(self):
         line = ""
-        expected = [""]
+        expected = [Token(value='', types=[])]
         self.assertEqual(expected, self.sm.parse(line))
 
     def test_unquoted_quoted_string(self):
@@ -76,8 +76,7 @@ class TestYamlLineSplitting(unittest.TestCase):
     def test_comment(self):
         line = "# Document start"
         expected = [
-            Token(value='# ', types=['Comment']),
-            Token(value='Document start', types=['Scalar'])
+            Token(value='# Document start', types=['Comment'])
         ]
         self.assertEqual(expected, self.sm.parse(line))
 

@@ -14,6 +14,7 @@ def parse_line_tokens(lines):
         line_has_dict = False
         line_has_comment = False
         line_has_scalar = False
+        line_has_flow_style = False
         for token in line.tokens:
             if line_has_comment:
                 break
@@ -23,8 +24,7 @@ def parse_line_tokens(lines):
                     line_has_comment = True
                     break
                 elif token_type == 'Scalar':
-                    # Treat this as a flow style scalar if we have already seen a dict on this line
-                    node = SyntaxNode(token.value, line_number, line_has_dict)
+                    node = SyntaxNode(token.value, line_number, line_has_flow_style)
                     # If this line already has a scalar and no nested structures, add this one as a child
                     if line_has_scalar and level == line.level:
                         level_parents[level].add_child(node)
@@ -35,7 +35,7 @@ def parse_line_tokens(lines):
                             nodes.append(node)
                         else:
                             level_parents[prev_level].add_child(level_parents[level])
-                            # Make sure all
+                            # Make sure all ancestors have their end line extended to the current line
                             while prev_level in level_parents:
                                 level_parents[prev_level].extend_end(level_parents[level].end_line_number)
                                 prev_level = prev_level - 1
@@ -43,10 +43,12 @@ def parse_line_tokens(lines):
                 elif token_type == 'Dict':
                     if line_has_dict:
                         # Second dict token makes this a flow style nested dictionary
+                        line_has_flow_style = True
                         level += 1
                     else:
                         line_has_dict = True
                 elif token_type == 'List' and line_has_dict:
                     # This is a flow style nested list
+                    line_has_flow_style = True
                     level += 1
     return nodes

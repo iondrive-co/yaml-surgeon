@@ -83,6 +83,17 @@ class TestYamlOperation(unittest.TestCase):
         child_names = [child.name for child in selected_nodes[0].children]
         self.assertIn('secure', child_names)
 
+    def test_node_select_level(self):
+        yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam"""
+        selected_nodes = YamlOperation(yaml_content).named_at_level('spam', 2).get_selected_nodes()
+        self.assertEqual(len(selected_nodes), 1)
+        self.assertEqual(selected_nodes[0].start_line_number, 5)
+
     def test_node_rename(self):
         yaml_content = """- parent1:
                 - srv-100:

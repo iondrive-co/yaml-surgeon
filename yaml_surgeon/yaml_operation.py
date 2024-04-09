@@ -20,6 +20,11 @@ class YamlOperation:
         self.selections.append(('named', name))
         return self
 
+    # Note that level starts at 0
+    def named_at_level(self, name, level):
+        self.selections.append(('named', name, level))
+        return self
+
     def with_parent(self, parent_name):
         self.selections.append(('parent', parent_name))
         return self
@@ -100,7 +105,8 @@ class YamlOperation:
                 self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0], level=level)
         for op, *args in self.selections:
             if op == 'named':
-                self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])
+                level = None if len(args) == 1 else args[1]
+                self.selected_nodes = find_nodes_called(self.selected_nodes, args[0], at_level=level)
 
     def _duplicate_node(self, name):
         for i, node in enumerate(self.nodes):
@@ -109,12 +115,12 @@ class YamlOperation:
                 break
 
 
-def find_nodes_called(nodes, name):
+def find_nodes_called(nodes, name, at_level=None, start_level=0):
     result = []
     for node in nodes:
-        if node.name == name or node.name.strip('\"') == name:
+        if (at_level is None or start_level == at_level) and (node.name == name or node.name.strip('\"') == name):
             result.append(node)
-        result.extend(find_nodes_called(node.children, name))
+        result.extend(find_nodes_called(node.children, name, at_level=at_level, start_level=start_level + 1))
     return result
 
 

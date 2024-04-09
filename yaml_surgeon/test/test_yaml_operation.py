@@ -141,7 +141,7 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")
 
-    def test_node_delete_flow_dict_single_line(self):
+    def test_node_delete_flow_dict_key(self):
         yaml_content = """
             - spam:
                 - egg: true
@@ -164,8 +164,32 @@ class TestYamlOperation(unittest.TestCase):
             - sausage:
                 - bacon: [egg, spam]
                 - beans: {}"""
-        self.assertEqual(expected_yaml_content, output_yaml_string,
-                         "The output YAML should match the expected content with duplicates")
+        self.assertEqual(expected_yaml_content, output_yaml_string)
+
+    def test_node_delete_flow_dict_value(self):
+        yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [egg, spam]
+            - sausage:
+                - bacon: [egg, spam]
+                - beans: {ham: spam}"""
+        output_yaml = YamlOperation(yaml_content).named('spam').with_parent_at_level('ham', 2).delete().execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - spam:
+                - egg: true
+                - ham:
+                    # Lovely
+                    - spam
+                - bacon: [egg, spam]
+            - sausage:
+                - bacon: [egg, spam]
+                - beans: {ham: }"""
+        self.assertEqual(expected_yaml_content, output_yaml_string)
 
     def test_node_duplicate_single(self):
         yaml_content = """

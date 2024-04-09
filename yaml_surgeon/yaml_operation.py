@@ -24,6 +24,11 @@ class YamlOperation:
         self.selections.append(('parent', parent_name))
         return self
 
+    # Note that level starts at 0
+    def with_parent_at_level(self, parent_name, level):
+        self.selections.append(('parent', parent_name, level))
+        return self
+
     def rename(self, new_name):
         self.operation = ('rename', new_name)
         return self
@@ -91,7 +96,8 @@ class YamlOperation:
         self.selected_nodes = self.nodes
         for op, *args in self.selections:
             if op == 'parent':
-                self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0])
+                level = None if len(args) == 1 else args[1]
+                self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0], level=level)
         for op, *args in self.selections:
             if op == 'named':
                 self.selected_nodes = find_nodes_called(self.selected_nodes, args[0])

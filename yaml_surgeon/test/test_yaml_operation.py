@@ -62,7 +62,8 @@ def assert_syntax_nodes_equal(expected, actual):
 class TestYamlOperation(unittest.TestCase):
 
     def test_node_selection(self):
-        yaml_content = """- parent1:
+        yaml_content = """
+        - parent1:
             - srv-100:
                 fast: true
         - parent2:
@@ -83,6 +84,25 @@ class TestYamlOperation(unittest.TestCase):
         child_names = [child.name for child in selected_nodes[0].children]
         self.assertIn('secure', child_names)
 
+    def test_node_multi_selection(self):
+        yaml_content = """
+        - parent1:
+            - srv-100:
+                fast: true
+        - parent2:
+            - srv-100:
+                secure: true
+        - database:
+            - srv-300
+        - webApp"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        selected_nodes = YamlOperation(parsed_yaml, lexed_lines).named('srv-100', 'srv-300').get_selected_nodes()
+        self.assertEqual(len(selected_nodes), 3)
+        self.assertEqual(selected_nodes[0].name, 'srv-100', 'srv-100')
+        self.assertEqual(selected_nodes[1].name, 'srv-100', 'srv-100')
+        self.assertEqual(selected_nodes[2].name, 'srv-300', 'srv-300')
+
     def test_node_select_level(self):
         yaml_content = """
             - spam:
@@ -95,7 +115,8 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(selected_nodes[0].start_line_number, 5)
 
     def test_node_rename(self):
-        yaml_content = """- parent1:
+        yaml_content = """
+            - parent1:
                 - srv-100:
                     fast: true
             - parent2:
@@ -112,7 +133,8 @@ class TestYamlOperation(unittest.TestCase):
                 self.assertIn('renamed-srv-100', node.name)
 
     def test_node_delete(self):
-        yaml_content = """- parent1:
+        yaml_content = """
+            - parent1:
                 - srv-100:
                     fast: true
             - parent2:

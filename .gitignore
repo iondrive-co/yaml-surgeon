@@ -33,6 +33,9 @@ out/
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
+# TODO list
+TODO
+
 ### macOS template
 # General
 .DS_Store

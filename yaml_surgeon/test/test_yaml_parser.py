@@ -17,7 +17,7 @@ class TestParseYaml(unittest.TestCase):
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
 
-        serverConfig = SyntaxNode('serverConfig', 0)
+        server_config = SyntaxNode('serverConfig', 0)
         srv100 = SyntaxNode('srv-100', 1)
         settings100 = SyntaxNode('settings', 2)
         settings100.add_child(SyntaxNode('fast', 2, flow_style=True))
@@ -33,8 +33,8 @@ class TestParseYaml(unittest.TestCase):
         srv200.add_child(backup_to)
         backup_to.add_child(SyntaxNode('storageUnit', 5))
 
-        serverConfig.add_child(srv100)
-        serverConfig.add_child(srv200)
+        server_config.add_child(srv100)
+        server_config.add_child(srv200)
 
         database = SyntaxNode('database', 6)
         srv300 = SyntaxNode('srv-300', 7)
@@ -42,7 +42,7 @@ class TestParseYaml(unittest.TestCase):
 
         webApp = SyntaxNode('webApp', 8)
 
-        expected = [serverConfig, database, webApp]
+        expected = [server_config, database, webApp]
         self.assertEqual(expected, parsed_yaml)
 
     def test_parse_valid_list_nested_dict_yaml2(self):

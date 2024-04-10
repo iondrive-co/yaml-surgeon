@@ -16,13 +16,13 @@ class YamlOperation:
         self.operation = None
         self.selected_nodes = None
 
-    def named(self, name):
-        self.selections.append(('named', name))
+    def named(self, *names):
+        self.selections.append(('named', *names))
         return self
 
     # Note that level starts at 0
     def named_at_level(self, name, level):
-        self.selections.append(('named', name, level))
+        self.selections.append(('named_level', name, level))
         return self
 
     def with_parent(self, parent_name):
@@ -104,9 +104,12 @@ class YamlOperation:
                 level = None if len(args) == 1 else args[1]
                 self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0], level=level)
         for op, *args in self.selections:
-            if op == 'named':
+            if op == 'named_level':
                 level = None if len(args) == 1 else args[1]
                 self.selected_nodes = find_nodes_called(self.selected_nodes, args[0], at_level=level)
+        for op, *args in self.selections:
+            if op == 'named':
+                self.selected_nodes = find_nodes_called(self.selected_nodes, *args, at_level=None)
 
     def _duplicate_node(self, name):
         for i, node in enumerate(self.nodes):
@@ -115,12 +118,13 @@ class YamlOperation:
                 break
 
 
-def find_nodes_called(nodes, name, at_level=None, start_level=0):
+def find_nodes_called(nodes, *names, at_level=None, start_level=0):
     result = []
     for node in nodes:
-        if (at_level is None or start_level == at_level) and (node.name == name or node.name.strip('\"') == name):
+        if (at_level is None or start_level == at_level) and \
+                any(node.name == name or node.name.strip('\"') == name for name in names):
             result.append(node)
-        result.extend(find_nodes_called(node.children, name, at_level=at_level, start_level=start_level + 1))
+        result.extend(find_nodes_called(node.children, *names, at_level=at_level, start_level=start_level + 1))
     return result
 
 

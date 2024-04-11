@@ -20,6 +20,10 @@ class YamlOperation:
         self.selections.append(('named', *names))
         return self
 
+    def name_contains(self, *names):
+        self.selections.append(('name_contains', *names))
+        return self
+
     # Note that level starts at 0
     def named_at_level(self, name, level):
         self.selections.append(('named_level', name, level))
@@ -110,6 +114,9 @@ class YamlOperation:
         for op, *args in self.selections:
             if op == 'named':
                 self.selected_nodes = find_nodes_called(self.selected_nodes, *args, at_level=None)
+        for op, *args in self.selections:
+            if op == 'name_contains':
+                self.selected_nodes = find_nodes_containing(self.selected_nodes, *args)
 
     def _duplicate_node(self, name):
         for i, node in enumerate(self.nodes):
@@ -125,6 +132,15 @@ def find_nodes_called(nodes, *names, at_level=None, start_level=0):
                 any(node.name == name or node.name.strip('\"') == name for name in names):
             result.append(node)
         result.extend(find_nodes_called(node.children, *names, at_level=at_level, start_level=start_level + 1))
+    return result
+
+
+def find_nodes_containing(nodes, *names):
+    result = []
+    for node in nodes:
+        if any(name in node.name for name in names):
+            result.append(node)
+        result.extend(find_nodes_containing(node.children, *names))
     return result
 
 

@@ -60,10 +60,11 @@ does not support many of the more complex yaml features such as anchors.
 
 - Selections are used to find parts of a yaml document to apply operations to.
 - When a selection matches a mapping key, all elements of the associated mapping value are selected as well.
-- Multiple selections are cumulative, meaning each selection refines the existing selection. All selection operations 
-are commutative, meaning the order you define them does not matter. Some selections such as `named` allow more than 
-one parameter in order to perform additive selections.
-- Some selection options take a level, which is the number of items deep (starting from 0) to examine elements from 
+- Multiple selections are cumulative, meaning each selection acts like an AND in refining the existing selection. 
+- Multiple selection operations are commutative, meaning the order you define them does not matter. 
+- Multiple selections are allowed to overlap.
+- Some selections such as `named` allow more than one parameter in order to perform additive (OR) selections. 
+- Some selection options take a level, which is the number of items deep (starting from 0) to select elements from 
 (i.e. only elements from that level deep in the nesting are examined, not those higher or lower in the yaml structure).
 
 **named()** Selects all scalars and mappings which exactly match the specified string. 
@@ -76,3 +77,13 @@ For example `.named('egg')` applied to:
 ```
 selects both the egg key and associated spam mapping, as well as the egg scalar which is a child of the ham mapping.
 It is also possible to select multiple names, for example `.named('egg', 'ham')`
+
+**name_contains()** Selects all scalars and mappings which contains the specified substring. 
+For example `.named('am')` applied to:
+```
+    - spam:
+        - egg:
+            - spam
+        - ham: [egg]
+```
+Selects the top spam mapping, the spam scalar value of the egg mapping, and the ham mapping.

@@ -103,6 +103,25 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(selected_nodes[1].name, 'srv-100', 'srv-100')
         self.assertEqual(selected_nodes[2].name, 'srv-300', 'srv-300')
 
+    def test_node_contains_selection(self):
+        yaml_content = """
+        - parent1:
+            - srv-100:
+                fast: true
+        - parent2:
+            - srv-100:
+                secure: true
+        - database:
+            - srv-300
+        - webApp"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        selected_nodes = YamlOperation(parsed_yaml, lexed_lines).name_contains('srv').get_selected_nodes()
+        self.assertEqual(len(selected_nodes), 3)
+        self.assertEqual(selected_nodes[0].name, 'srv-100', 'srv-100')
+        self.assertEqual(selected_nodes[1].name, 'srv-100', 'srv-100')
+        self.assertEqual(selected_nodes[2].name, 'srv-300', 'srv-300')
+
     def test_node_select_level(self):
         yaml_content = """
             - spam:

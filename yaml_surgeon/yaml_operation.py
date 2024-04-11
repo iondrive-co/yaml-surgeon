@@ -29,13 +29,13 @@ class YamlOperation:
         self.selections.append(('named_level', name, level))
         return self
 
-    def with_parent(self, parent_name):
-        self.selections.append(('parent', parent_name))
+    def with_parents(self, *parent_names):
+        self.selections.append(('parent', *parent_names))
         return self
 
     # Note that level starts at 0
     def with_parent_at_level(self, parent_name, level):
-        self.selections.append(('parent', parent_name, level))
+        self.selections.append(('parent_level', parent_name, level))
         return self
 
     def rename(self, new_name):
@@ -103,10 +103,13 @@ class YamlOperation:
 
     def _apply_selections(self):
         self.selected_nodes = self.nodes
+        # TODO these are order dependent. Refactor so we can put them in one big loop
         for op, *args in self.selections:
             if op == 'parent':
-                level = None if len(args) == 1 else args[1]
-                self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0], level=level)
+                self.selected_nodes = find_children_of_node_called(self.selected_nodes, *args, level=None)
+        for op, *args in self.selections:
+            if op == 'parent_level':
+                self.selected_nodes = find_children_of_node_called(self.selected_nodes, args[0], level=args[1])
         for op, *args in self.selections:
             if op == 'named_level':
                 level = None if len(args) == 1 else args[1]
@@ -117,6 +120,7 @@ class YamlOperation:
         for op, *args in self.selections:
             if op == 'name_contains':
                 self.selected_nodes = find_nodes_containing(self.selected_nodes, *args)
+
 
     def _duplicate_node(self, name):
         for i, node in enumerate(self.nodes):
@@ -144,11 +148,11 @@ def find_nodes_containing(nodes, *names):
     return result
 
 
-def find_children_of_node_called(nodes, name, level=None):
+def find_children_of_node_called(nodes, *names, level=None):
     result = []
 
     def search(node, current_level):
-        if (level is None or current_level == level) and node.name == name:
+        if (level is None or current_level == level) and any(node.name == name for name in names):
             result.extend(node.children)
         elif level is None or current_level < level:
             for child in node.children:

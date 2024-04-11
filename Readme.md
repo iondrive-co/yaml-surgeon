@@ -79,11 +79,12 @@ selects both the egg key and associated spam mapping, as well as the egg scalar 
 It is also possible to select multiple names, for example `.named('egg', 'ham')`
 
 **name_contains()** Selects all scalars and mappings which contains the specified substring. 
-For example `.named('am')` applied to:
+For example `.name_contains('am')` applied to:
 ```
     - spam:
         - egg:
             - spam
         - ham: [egg]
 ```
-Selects the top spam mapping, the spam scalar value of the egg mapping, and the ham mapping.
+Selects the top spam mapping, the spam scalar value of the egg mapping, and the ham mapping. It is also possible to 
+select multiple substrings, for example `.name_contains('am', 'gg')`

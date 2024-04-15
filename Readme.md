@@ -1,5 +1,7 @@
 # Yaml Surgeon
 
+## Overview
+
 Precise editing of yaml documents in python or from the command line, where precise means preserving flow style and 
 making no unnecessary changes to the remainder of the steam. For example:
 ```
@@ -54,6 +56,8 @@ elements, for example you could then do `YamlOperation(output).named('egg').dele
 ```
 For more details of all of these and other options, please refer to the Guide section below.
 
+## Usage
+
 You can use Yaml Surgeon to edit yaml files by passing in arguments to the main method (see the included PyCharm 
 [launcher](./.idea/runConfigurations/yaml_surgeon.xml)), or by importing 
 `from yaml_surgeon.yaml_operation import YamlOperation` and building your operation as in the example above. 
@@ -75,8 +79,9 @@ Yaml Surgeon is licensed under the License.txt file in the root directory of its
 - Multiple selections are allowed to overlap.
 - Some selections such as `named` allow more than one parameter in order to perform additive (OR) selections.
 
-**named()** Selects all scalars and mappings which exactly match the specified string. 
-For example `.named('egg')` applied to:
+#### named() 
+
+Selects all scalars and mappings which exactly match the specified string. For example `.named('egg')` applied to:
 ```
     - spam:
         - egg:
@@ -86,8 +91,9 @@ For example `.named('egg')` applied to:
 selects both the egg key and associated spam mapping, as well as the egg scalar which is a child of the ham mapping.
 It is also possible to select multiple names, for example `.named('egg', 'ham')`
 
-**name_contains()** Selects all scalars and mappings which contains the specified substring. 
-For example `.name_contains('am')` applied to:
+#### name_contains()
+
+Selects all scalars and mappings which contains the specified substring. For example `.name_contains('am')` applied to:
 ```
     - spam:
         - egg:
@@ -97,9 +103,11 @@ For example `.name_contains('am')` applied to:
 Selects the top spam mapping, the spam scalar value of the egg mapping, and the ham mapping. It is also possible to 
 select multiple substrings, for example `.name_contains('am', 'gg')`
 
-**named_at_level()** Selects all scalars matching the specified name at the specified level. A level is the number of 
-items deep (starting from 0) to look for elements matching the name, with only matching elements on that level being
-returned. For example `.named_at_level('egg', 1)` applied to:
+#### named_at_level()
+
+Selects all scalars matching the specified name at the specified level. A level is the number of items deep (starting 
+from 0) to look for elements matching the name, with only matching elements on that level being returned. For example 
+`.named_at_level('egg', 1)` applied to:
 ```
     - spam:
         - egg:
@@ -108,10 +116,11 @@ returned. For example `.named_at_level('egg', 1)` applied to:
 ```
 Selects egg from the egg to spam mapping, but not the egg scalar on the last line.
 
-**with_parents()** Selects all scalars and mappings whose parent names exactly match the specified string. A parent is a
-mapping at an earlier/lower level that encompasses the element being selected, and we only allow for a single parent 
-(even though yaml supports multiple).
-For example `.with_parent('ham')` applied to:
+#### with_parents()
+
+Selects all scalars and mappings whose parent names exactly match the specified string. A parent is a mapping at an 
+earlier level that encompasses the element being selected, and we only allow for a single parent (even though yaml 
+supports multiple). For example `.with_parent('ham')` applied to:
 ```
     - spam:
         - bacon:
@@ -121,8 +130,10 @@ For example `.with_parent('ham')` applied to:
 ```
 Selects both the ham and egg scalars. It is also possible to select multiple parents, for example `.named('spam', 'egg')`
 
-**with_parent_at_level()** Selects all scalars and mappings whose parent names exactly match the specified string
-and who are located at the specified level. For example `.with_parent('spam', 1)` applied to:
+#### with_parent_at_level()
+
+Selects all scalars and mappings whose parent names exactly match the specified string and which are located at the 
+specified level. For example `.with_parent('spam', 1)` applied to:
 ```
     - spam:
         - bacon:
@@ -131,3 +142,57 @@ and who are located at the specified level. For example `.with_parent('spam', 1)
         - spam: [egg]
 ```
 selects only the egg scalar.
+
+### Operations
+
+An operation modifies the yaml document based on the selected text.
+
+#### delete()
+
+Removes the selection from the output. If the selection is a mapping key, then the entire mapping is removed. If the 
+selection is a mapping value, then only the value is removed (this is valid yaml). This action may also remove the 
+subsequent comma and space (if the selection is in a flow style sequence with elements after it), or the entirety of the 
+line (for example if the selection is a sequence element on its own line), or multiple lines (if the selection is a 
+mapping key with value covering multiple lines).
+
+For example `.named('egg').delete()` applied to:
+```
+    - spam:
+        - egg:
+            - spam
+        - ham: [egg]
+```
+results in
+```
+    - spam:
+        - ham: []
+```
+
+#### duplicate_as()
+
+Copies the selection, changes the name of the selection key, and inserts the new selection after the existing one.
+For example `.named('ham').duplicate_as('spam')` applied to:
+```
+    - spam:
+        - ham: [egg]
+```
+results in
+```
+    - spam:
+        - ham: [egg]
+        - spam: [egg]
+```
+
+#### rename()
+
+Changes the name of the selection key.
+For example `.named('ham').rename('spam')` applied to:
+```
+    - spam:
+        - ham: [egg]
+```
+results in
+```
+    - spam:
+        - spam: [egg]
+```

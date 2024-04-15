@@ -1,5 +1,7 @@
-Surgical editing of yaml documents in python or from the command line, preserving flow style and making no unnecessary 
-changes to the remainder of the steam. For example:
+# Yaml Surgeon
+
+Precise editing of yaml documents in python or from the command line, where precise means preserving flow style and 
+making no unnecessary changes to the remainder of the steam. For example:
 ```
 yaml = """
     - spam:
@@ -12,18 +14,13 @@ yaml = """
         - bacon: [egg, spam]
         - beans: {spam: spam}"""
 ```
-could be edited with:
+could be edited as follows:
 ```
 output = YamlOperation(yaml).named('bacon').with_parent('spam').duplicate_as('can').then()\
                             .named('egg').with_parent('can').duplicate_as('spam').execute()
 ```
-The first operation inserts a `- can: [egg, spam]` line under `- bacon: [egg, spam]`, which is the line selected with 
-`.named('bacon').with_parent('spam')` (the `duplicate_as` parameter of `can` was used to name the duplicated key). 
-The second operation inserts a new list entry called `spam` after `egg`, which was the list entry selected with 
-`.named('egg').with_parent('can')`. Note the second operation is selecting on the yaml document modified by the first 
-operation (the `then` function begins a new operation).
-
-Displaying the final output with `print("\n".join(output))` gives:
+This inserts a new line `- can: [egg, spam, spam]`, which you can see when you display the final output with 
+`print("\n".join(output))`:
 ```
     - spam:
         - egg: true
@@ -36,7 +33,13 @@ Displaying the final output with `print("\n".join(output))` gives:
         - bacon: [egg, spam]
         - beans: {spam: spam}
 ```
-In this example each of the selections was chosen to match exactly one entry, but you can apply operations to multiple
+To break that down a bit more, the first operation above inserted a `- can: [egg, spam]` line under `- bacon: [egg, spam]`, 
+which is the line selected with `.named('bacon').with_parent('spam')` (the `duplicate_as` parameter of `can` was used 
+to name the duplicated key). The second operation then inserted a new list entry called `spam` after `egg`, which was 
+the list entry selected with `.named('egg').with_parent('can')`. Note the second operation is selecting on the yaml 
+document modified by the first operation (the `then` function begins a new operation).
+
+In that example each of the selections was chosen to match exactly one entry, but you can apply operations to multiple
 elements, for example you could then do `YamlOperation(output).named('egg').delete().execute()` which would result in:
 ```
     - spam:
@@ -49,23 +52,28 @@ elements, for example you could then do `YamlOperation(output).named('egg').dele
         - bacon: [spam]
         - beans: {spam: spam}
 ```
+For more details of all of these and other options, please refer to the Guide section below.
 
-You can use yaml surgeon to edit yaml files by passing in arguments to the main method (see the included PyCharm 
+You can use Yaml Surgeon to edit yaml files by passing in arguments to the main method (see the included PyCharm 
 [launcher](./.idea/runConfigurations/yaml_surgeon.xml)), or by importing 
 `from yaml_surgeon.yaml_operation import YamlOperation` and building your operation as in the example above. 
-Please note that this is an early prototype version which has only been tested with a few simple yaml documents, and it 
-does not support many of the more complex yaml features such as anchors.
 
-## YamlOperation Selections
+This is a quick and dirty implementation which has only been tested with a few simple yaml documents, and it does not 
+support many of the more complex yaml features such as multiple parents. Other than that, please use Github issues to 
+report any.
+
+Yaml Surgeon is licensed under the License.txt file in the root directory of its source tree.
+
+## Guide to YamlOperation
+
+### Selections
 
 - Selections are used to find parts of a yaml document to apply operations to.
 - When a selection matches a mapping key, all elements of the associated mapping value are selected as well.
 - Multiple selections are cumulative, meaning each selection acts like an AND in refining the existing selection. 
 - Multiple selection operations are commutative, meaning the order you define them does not matter. 
 - Multiple selections are allowed to overlap.
-- Some selections such as `named` allow more than one parameter in order to perform additive (OR) selections. 
-- Some selection options take a level, which is the number of items deep (starting from 0) to select elements from 
-(i.e. only elements from that level deep in the nesting are examined, not those higher or lower in the yaml structure).
+- Some selections such as `named` allow more than one parameter in order to perform additive (OR) selections.
 
 **named()** Selects all scalars and mappings which exactly match the specified string. 
 For example `.named('egg')` applied to:
@@ -88,3 +96,38 @@ For example `.name_contains('am')` applied to:
 ```
 Selects the top spam mapping, the spam scalar value of the egg mapping, and the ham mapping. It is also possible to 
 select multiple substrings, for example `.name_contains('am', 'gg')`
+
+**named_at_level()** Selects all scalars matching the specified name at the specified level. A level is the number of 
+items deep (starting from 0) to look for elements matching the name, with only matching elements on that level being
+returned. For example `.named_at_level('egg', 1)` applied to:
+```
+    - spam:
+        - egg:
+            - spam
+        - ham: [egg]
+```
+Selects egg from the egg to spam mapping, but not the egg scalar on the last line.
+
+**with_parents()** Selects all scalars and mappings whose parent names exactly match the specified string. A parent is a
+mapping at an earlier/lower level that encompasses the element being selected, and we only allow for a single parent 
+(even though yaml supports multiple).
+For example `.with_parent('ham')` applied to:
+```
+    - spam:
+        - bacon:
+            - spam:
+                - ham
+        - ham: [egg]
+```
+Selects both the ham and egg scalars. It is also possible to select multiple parents, for example `.named('spam', 'egg')`
+
+**with_parent_at_level()** Selects all scalars and mappings whose parent names exactly match the specified string
+and who are located at the specified level. For example `.with_parent('spam', 1)` applied to:
+```
+    - spam:
+        - bacon:
+            - spam:
+                - ham
+        - spam: [egg]
+```
+selects only the egg scalar.

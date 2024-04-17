@@ -1,6 +1,7 @@
 from collections import defaultdict
 from yaml_surgeon.yaml_lexer import scan_text, scan_lines
 from yaml_surgeon.yaml_parser import parse_line_tokens
+from yaml_surgeon.structures import SyntaxNode
 
 
 class YamlOperation:
@@ -50,6 +51,10 @@ class YamlOperation:
         self.operation = ('duplicate', name)
         return self
 
+    def insert_sibling(self, name):
+        self.operation = ('insert_sibling', name)
+        return self
+
     def get_selected_nodes(self):
         if self.selected_nodes is None:
             self._apply_selections()
@@ -89,6 +94,20 @@ class YamlOperation:
                     # Copy everything else about the lines verbatim
                     for i in range(node.start_line_number, node.end_line_number + 1):
                         self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
+        elif op == 'insert_sibling':
+            last_selected_node = self.selected_nodes[-1]
+            if last_selected_node.flow_style:
+                last_selected_node.rename(last_selected_node.name + ", " + arg)
+            else:
+                # Insert a new selection at the line after the last selection.
+                # Use the contents from the first line of the selection as a basis, and rename to flag it as changed
+                new_line_number = last_selected_node.end_line_number + 1
+                new_node = SyntaxNode(self.selected_nodes[0].name, new_line_number)
+                new_node.rename(arg)
+                self.selected_nodes.append(new_node)
+                self.lexed_lines.insert(new_line_number, self.lexed_lines[self.selected_nodes[0].start_line_number])
+                # This removes any connectors from the line we copied
+                flow_entries_to_delete.append(new_node.name)
         line_node_map = create_line_number_map(self.selected_nodes)
         return to_lines(line_node_map, self.lexed_lines, lines_to_delete, flow_entries_to_delete)
 
@@ -120,7 +139,6 @@ class YamlOperation:
         for op, *args in self.selections:
             if op == 'name_contains':
                 self.selected_nodes = find_nodes_containing(self.selected_nodes, *args)
-
 
     def _duplicate_node(self, name):
         for i, node in enumerate(self.nodes):

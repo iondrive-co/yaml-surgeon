@@ -347,6 +347,37 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")
 
+    def test_node_insert_sibling_line(self):
+        yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('srv-100').insert_sibling('srv-200').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - parent1:
+                - srv-100:
+                    fast: true
+                - srv-200"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content including insertion")
+
+    def test_node_insert_sibling_flow_style(self):
+        yaml_content = """
+            - sausage:
+                - bacon: [egg, spam]"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('spam').insert_sibling('ham').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - sausage:
+                - bacon: [egg, spam, ham]"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content including insertion")
+
     def test_chain_multiple(self):
         yaml_content = """
             - spam:

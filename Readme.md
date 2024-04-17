@@ -183,6 +183,26 @@ results in
         - spam: [egg]
 ```
 
+#### insert_sibling()
+
+Inserts a new sibling node for the first node in a selection.
+For example `.named('ham').insert_sibling('bacon')` applied to:
+```
+    - spam:
+        - ham: [egg]
+```
+would result it
+```
+    - spam:
+        - ham: [egg]
+        - bacon
+```
+Or `.named('egg').insert_sibling('bacon')` would result in
+```
+    - spam:
+        - ham: [egg, bacon]
+```
+
 #### rename()
 
 Changes the name of the selection key.

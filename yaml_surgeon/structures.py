@@ -3,7 +3,7 @@
 class Token:
     def __init__(self, value, types):
         self.value = value
-        # Types can be Comment, List, Dict, or Scalar
+        # Types can be Comment, Sequence, Mapping, or Scalar
         self.types = types
 
     def __eq__(self, other):
@@ -38,7 +38,7 @@ class Line:
 
 
 class SyntaxNode:
-    def __init__(self, name, line_number, flow_style=False):
+    def __init__(self, name, line_number, flow_style=""):
         self.name = name
         self.renamed_to = None
         self.start_line_number = line_number

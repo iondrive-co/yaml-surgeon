@@ -189,18 +189,27 @@ Inserts a new sibling node for the first node in a selection.
 For example `.named('ham').insert_sibling('bacon')` applied to:
 ```
     - spam:
+        - can: {span: bam}
         - ham: [egg]
 ```
-would result it
+would result in
 ```
     - spam:
+        - can: {span: bam}
         - ham: [egg]
         - bacon
 ```
-Or `.named('egg').insert_sibling('bacon')` would result in
+or `.named('egg').insert_sibling('bacon')` would result in
 ```
     - spam:
+        - can: {span: bam}
         - ham: [egg, bacon]
+```
+or `.named('span').insert_sibling('spam')` would result in
+```
+    - spam:
+        - can: {span: bam, spam:}
+        - ham: [egg]
 ```
 
 #### rename()

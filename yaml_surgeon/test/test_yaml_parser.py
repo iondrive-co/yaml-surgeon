@@ -12,7 +12,7 @@ class TestParseYaml(unittest.TestCase):
             text = file.read()
         return text
 
-    def test_parse_valid_list_nested_dict(self):
+    def test_parse_valid_sequence_nested_mapping(self):
         yaml_content = self.load_yaml_sample("valid1.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
@@ -20,14 +20,14 @@ class TestParseYaml(unittest.TestCase):
         server_config = SyntaxNode('serverConfig', 0)
         srv100 = SyntaxNode('srv-100', 1)
         settings100 = SyntaxNode('settings', 2)
-        settings100.add_child(SyntaxNode('fast', 2, flow_style=True))
-        settings100.add_child(SyntaxNode('secure', 2, flow_style=True))
+        settings100.add_child(SyntaxNode('fast', 2, flow_style="Sequence"))
+        settings100.add_child(SyntaxNode('secure', 2, flow_style="Sequence"))
         srv100.add_child(settings100)
 
         srv200 = SyntaxNode('srv-200', 3)
         settings200 = SyntaxNode('settings', 4)
-        settings200.add_child(SyntaxNode('reliable', 4, flow_style=True))
-        settings200.add_child(SyntaxNode('scalable', 4, flow_style=True))
+        settings200.add_child(SyntaxNode('reliable', 4, flow_style="Sequence"))
+        settings200.add_child(SyntaxNode('scalable', 4, flow_style="Sequence"))
         srv200.add_child(settings200)
         backup_to = SyntaxNode('backup_to', 5)
         srv200.add_child(backup_to)
@@ -45,7 +45,7 @@ class TestParseYaml(unittest.TestCase):
         expected = [server_config, database, webApp]
         self.assertEqual(expected, parsed_yaml)
 
-    def test_parse_valid_list_nested_dict_yaml2(self):
+    def test_parse_valid_sequence_nested_mapping_yaml2(self):
         yaml_content = self.load_yaml_sample("valid2.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
@@ -75,7 +75,7 @@ class TestParseYaml(unittest.TestCase):
         expected = [apiVersion, kind, metadata]
         self.assertEqual(expected, parsed_yaml)
 
-    def test_parse_valid_list_nested_dict_yaml3(self):
+    def test_parse_valid_sequence_nested_mapping_yaml3(self):
         yaml_content = self.load_yaml_sample("valid3.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)

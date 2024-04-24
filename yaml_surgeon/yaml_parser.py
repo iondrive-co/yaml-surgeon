@@ -14,7 +14,7 @@ def parse_line_tokens(lines):
         line_has_dict = False
         line_has_comment = False
         line_has_scalar = False
-        line_has_flow_style = False
+        line_flow_style = ""
         for token in line.tokens:
             if line_has_comment:
                 break
@@ -24,7 +24,7 @@ def parse_line_tokens(lines):
                     line_has_comment = True
                     break
                 elif token_type == 'Scalar':
-                    node = SyntaxNode(token.value, line_number, line_has_flow_style)
+                    node = SyntaxNode(token.value, line_number, line_flow_style)
                     # If this line already has a scalar and no nested structures, add this one as a child
                     if line_has_scalar and level == line.level:
                         level_parents[level].add_child(node)
@@ -40,15 +40,14 @@ def parse_line_tokens(lines):
                                 level_parents[prev_level].extend_end(level_parents[level].end_line_number)
                                 prev_level = prev_level - 1
                     line_has_scalar = True
-                elif token_type == 'Dict':
+                elif token_type == 'Mapping':
                     if line_has_dict:
-                        # Second dict token makes this a flow style nested dictionary
-                        line_has_flow_style = True
+                        # Second dict token makes this a flow style nested mapping
+                        line_flow_style = "Mapping"
                         level += 1
                     else:
                         line_has_dict = True
-                elif token_type == 'List' and line_has_dict:
-                    # This is a flow style nested list
-                    line_has_flow_style = True
+                elif token_type == 'Sequence' and line_has_dict:
+                    line_flow_style = "Sequence"
                     level += 1
     return nodes

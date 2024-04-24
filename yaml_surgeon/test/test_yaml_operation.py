@@ -13,7 +13,7 @@ class TestFindChildren(unittest.TestCase):
             text = file.read()
         return text
 
-    def test_find_children_of_node_valid_list_nested_dict(self):
+    def test_find_children_of_node_valid_sequence_nested_mapping(self):
         yaml_content = self.load_yaml_sample("valid1.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
@@ -26,7 +26,7 @@ class TestFindChildren(unittest.TestCase):
         expected = [SyntaxNode('srv-100', 1), SyntaxNode('srv-200', 3)]
         assert_syntax_nodes_equal(expected, result_level)
 
-    def test_find_children_of_node_valid_list_nested_dict_yaml2(self):
+    def test_find_children_of_node_valid_sequence_nested_mapping_yaml2(self):
         yaml_content = self.load_yaml_sample("valid2.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
@@ -39,7 +39,7 @@ class TestFindChildren(unittest.TestCase):
         expected = [SyntaxNode('name', 3), SyntaxNode('labels', 4)]
         assert_syntax_nodes_equal(expected, result_level)
 
-    def test_find_children_of_node_valid_list_nested_dict_yaml3(self):
+    def test_find_children_of_node_valid_sequence_nested_mapping_yaml3(self):
         yaml_content = self.load_yaml_sample("valid3.yaml")
         lexed_lines = scan_text(yaml_content)
         parsed_yaml = parse_line_tokens(lexed_lines)
@@ -187,7 +187,7 @@ class TestYamlOperation(unittest.TestCase):
         for node in parsed_yaml:
             self.assertNotEqual(node.name, 'srv-100', "Node 'srv-100' should have been deleted")
 
-    def test_node_delete_flow_list(self):
+    def test_node_delete_flow_sequence(self):
         yaml_content = """
             - spam:
                 - egg: true
@@ -212,7 +212,7 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content with duplicates")
 
-    def test_node_delete_flow_dict_key(self):
+    def test_node_delete_flow_mapping_key(self):
         yaml_content = """
             - spam:
                 - egg: true
@@ -237,7 +237,7 @@ class TestYamlOperation(unittest.TestCase):
                 - beans: {}"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
-    def test_node_delete_flow_dict_value(self):
+    def test_node_delete_flow_mapping_value(self):
         yaml_content = """
             - spam:
                 - egg: true
@@ -364,7 +364,7 @@ class TestYamlOperation(unittest.TestCase):
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content including insertion")
 
-    def test_node_insert_sibling_flow_style(self):
+    def test_node_insert_sibling_flow_sequence(self):
         yaml_content = """
             - sausage:
                 - bacon: [egg, spam]"""
@@ -375,6 +375,20 @@ class TestYamlOperation(unittest.TestCase):
         expected_yaml_content = """
             - sausage:
                 - bacon: [egg, spam, ham]"""
+        self.assertEqual(expected_yaml_content, output_yaml_string,
+                         "The output YAML should match the expected content including insertion")
+
+    def test_node_insert_sibling_flow_style_mapping(self):
+        yaml_content = """
+            - sausage:
+                - bacon: {egg: spam}"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('egg').insert_sibling('ham').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - sausage:
+                - bacon: {egg: spam, ham:}"""
         self.assertEqual(expected_yaml_content, output_yaml_string,
                          "The output YAML should match the expected content including insertion")
 

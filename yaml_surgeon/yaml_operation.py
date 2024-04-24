@@ -1,7 +1,7 @@
 from collections import defaultdict
 from yaml_surgeon.yaml_lexer import scan_text, scan_lines
 from yaml_surgeon.yaml_parser import parse_line_tokens
-from yaml_surgeon.structures import SyntaxNode
+from yaml_surgeon.structures import SyntaxNode, Token
 
 
 class YamlOperation:
@@ -79,8 +79,10 @@ class YamlOperation:
         elif op == 'duplicate':
             num_inserted = 0
             for index, node in enumerate(list(self.selected_nodes)):
-                if node.flow_style:
+                if node.flow_style == "Sequence":
                     node.rename(node.name + ", " + arg)
+                elif node.flow_style == "Mapping":
+                    node.rename(node.name + ": " + arg)
                 else:
                     shift_length = node.end_line_number - node.start_line_number + 1
                     # In this case we also duplicate the name so that copy matches on the duplicated line
@@ -96,8 +98,11 @@ class YamlOperation:
                         self.lexed_lines.insert(i + shift_length, self.lexed_lines[i])
         elif op == 'insert_sibling':
             last_selected_node = self.selected_nodes[-1]
-            if last_selected_node.flow_style:
+            if last_selected_node.flow_style == "Sequence":
                 last_selected_node.rename(last_selected_node.name + ", " + arg)
+            elif last_selected_node.flow_style == "Mapping":
+                # Insert the new key before the final } TODO make it after selected key in case there is a comment
+                self.lexed_lines[last_selected_node.end_line_number].tokens.insert(-1, Token(", " + arg + ":", "Mapping"))
             else:
                 # Insert a new selection at the line after the last selection.
                 # Use the contents from the first line of the selection as a basis, and rename to flag it as changed

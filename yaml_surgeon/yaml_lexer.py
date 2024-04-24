@@ -27,9 +27,9 @@ class AlphaSpansStateMachine:
                 self.span_types.append('Scalar')
             else:
                 if char in '-[':
-                    self.span_types.append('List')
+                    self.span_types.append('Sequence')
                 elif char in ':{':
-                    self.span_types.append('Dict')
+                    self.span_types.append('Mapping')
                 elif char == '#':
                     self._end_span()
                     # Treat this as a quoted alpha with no start, meaning take everything until the end of the line
@@ -42,7 +42,7 @@ class AlphaSpansStateMachine:
                 self._end_span()
                 self.state = 'Special'
                 if char == ':':
-                    self.span_types.append('Dict')
+                    self.span_types.append('Mapping')
                 elif char == '#':
                     self.start_quote = None
                     self.state = 'Quoted Alpha'
@@ -58,7 +58,7 @@ class AlphaSpansStateMachine:
                 self._end_span()
                 self.state = 'Special'
                 if char == ':':
-                    self.span_types.append('Dict')
+                    self.span_types.append('Mapping')
                 elif char == '#':
                     self.start_quote = None
                     self.state = 'Quoted Alpha'

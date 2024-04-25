@@ -101,8 +101,15 @@ class YamlOperation:
             if last_selected_node.flow_style == "Sequence":
                 last_selected_node.rename(last_selected_node.name + ", " + arg)
             elif last_selected_node.flow_style == "Mapping":
-                # Insert the new key before the final } TODO make it after selected key in case there is a comment
-                self.lexed_lines[last_selected_node.end_line_number].tokens.insert(-1, Token(", " + arg + ":", "Mapping"))
+                # Insert the new key after the mapping completes for any tokens matching the selected name
+                tokens = self.lexed_lines[last_selected_node.end_line_number].tokens
+                matching_mapping = False
+                for i, token in enumerate(tokens):
+                    if matching_mapping and 'Mapping' not in token.types and 'Scalar' not in token.types:
+                        tokens.insert(i, Token(", " + arg + ":", "Mapping"))
+                        matching_mapping = False
+                    elif token.value == last_selected_node.name:
+                        matching_mapping = True
             else:
                 # Insert a new selection at the line after the last selection.
                 # Use the contents from the first line of the selection as a basis, and rename to flag it as changed

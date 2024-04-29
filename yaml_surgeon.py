@@ -1,6 +1,4 @@
 import argparse
-from yaml_surgeon.yaml_lexer import scan_text
-from yaml_surgeon.yaml_parser import parse_line_tokens
 from yaml_surgeon.yaml_operation import YamlOperation
 
 

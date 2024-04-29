@@ -82,7 +82,18 @@ class YamlOperation:
                 if node.flow_style == "Sequence":
                     node.rename(node.name + ", " + arg)
                 elif node.flow_style == "Mapping":
-                    node.rename(node.name + ": " + arg)
+                    # Insert the new key after the mapping completes for any tokens matching the selected name
+                    tokens = self.lexed_lines[node.end_line_number].tokens
+                    matching_mapping = False
+                    for i, token in enumerate(tokens):
+                        if matching_mapping and 'Mapping' not in token.types and 'Scalar' not in token.types:
+                            token_val = ", " + arg + ":"
+                            if node.children:
+                                token_val += " " + node.children[0].name
+                            tokens.insert(i, Token(token_val, "Mapping"))
+                            matching_mapping = False
+                        elif token.value == node.name:
+                            matching_mapping = True
                 else:
                     shift_length = node.end_line_number - node.start_line_number + 1
                     # In this case we also duplicate the name so that copy matches on the duplicated line

@@ -126,7 +126,8 @@ class YamlOperation:
                 # Use the contents from the first line of the selection as a basis, and rename to flag it as changed
                 new_line_number = last_selected_node.end_line_number + 1
                 new_node = SyntaxNode(self.selected_nodes[0].name, new_line_number)
-                new_node.rename(arg)
+                rename_to = arg + ":" if last_selected_node.children else arg
+                new_node.rename(rename_to)
                 self.selected_nodes.append(new_node)
                 self.lexed_lines.insert(new_line_number, self.lexed_lines[self.selected_nodes[0].start_line_number])
                 # This removes any connectors from the line we copied

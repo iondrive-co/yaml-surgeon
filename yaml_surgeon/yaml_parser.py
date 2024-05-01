@@ -15,7 +15,7 @@ def parse_line_tokens(lines):
         line_has_comment = False
         line_has_scalar = False
         line_flow_style = ""
-        for token in line.tokens:
+        for i, token in enumerate(line.tokens):
             if line_has_comment:
                 break
             for token_type in token.types:
@@ -24,7 +24,8 @@ def parse_line_tokens(lines):
                     line_has_comment = True
                     break
                 elif token_type == 'Scalar':
-                    node = SyntaxNode(token.value, line_number, line_flow_style)
+                    is_sequence = 'Sequence' in line.tokens[i - 1].types
+                    node = SyntaxNode(token.value, line_number, line_flow_style, is_sequence)
                     # If this line already has a scalar and no nested structures, add this one as a child
                     if line_has_scalar and level == line.level:
                         level_parents[level].add_child(node)

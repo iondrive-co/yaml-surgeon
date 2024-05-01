@@ -33,7 +33,7 @@ class TestInsert(unittest.TestCase):
             - parent1:
                 - srv-100:
                     fast: true
-                - srv-200:""" #TODO type the tokens here so we can treat a map sequence differently to a map key (below)
+                - srv-200"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
     def test_insert_sibling_map_key(self):

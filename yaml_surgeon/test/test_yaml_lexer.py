@@ -27,7 +27,7 @@ class TestYamlLineSplitting(unittest.TestCase):
         line =      "        settings: []"
         expected = [Token(value='        ', types=[]),
                     Token(value='settings', types=['Scalar']),
-                    Token(value=': []', types=['Dict', 'List'])]
+                    Token(value=': []', types=['Mapping', 'Sequence'])]
         self.assertEqual(expected, self.sm.parse(line))
 
     def test_nested_list(self):
@@ -35,7 +35,7 @@ class TestYamlLineSplitting(unittest.TestCase):
         expected = [
             Token(value='        ', types=[]),
             Token(value='settings', types=['Scalar']),
-            Token(value=': [', types=['Dict', 'List']),
+            Token(value=': [', types=['Mapping', 'Sequence']),
             Token(value='fast', types=['Scalar']),
             Token(value=', ', types=[]),
             Token(value='secure', types=['Scalar']),
@@ -48,7 +48,7 @@ class TestYamlLineSplitting(unittest.TestCase):
         expected = [
             Token(value='        ', types=[]),
             Token(value='settings2', types=['Scalar']),
-            Token(value=': [ ', types=['Dict', 'List']),
+            Token(value=': [ ', types=['Mapping', 'Sequence']),
             Token(value='"fast:"', types=['Scalar']),
             Token(value=', ', types=[]),
             Token(value='"secure"', types=['Scalar']),
@@ -61,13 +61,13 @@ class TestYamlLineSplitting(unittest.TestCase):
         expected = [
             Token(value='        ', types=[]),
             Token(value='bob', types=['Scalar']),
-            Token(value=': {', types=['Dict', 'Dict']),
+            Token(value=': {', types=['Mapping', 'Mapping']),
             Token(value='charlie', types=['Scalar']),
-            Token(value=': ', types=['Dict']),
+            Token(value=': ', types=['Mapping']),
             Token(value='3', types=['Scalar']),
             Token(value=', ', types=[]),
             Token(value='d', types=['Scalar']),
-            Token(value=': ', types=['Dict']),
+            Token(value=': ', types=['Mapping']),
             Token(value='4', types=['Scalar']),
             Token(value='}', types=[])
         ]
@@ -94,33 +94,33 @@ class TestLexYaml(unittest.TestCase):
         parsed_yaml = scan_text(yaml_content)
         expected = [
             Line(tokens=[
-                Token(value='- ', types=['List']),
+                Token(value='- ', types=['Sequence']),
                 Token(value='serverConfig', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=1, level=0),
             Line(tokens=[
-                Token(value='    - ', types=['List']),
+                Token(value='    - ', types=['Sequence']),
                 Token(value='srv-100', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=2, level=1),
             Line(tokens=[
                 Token(value='        ', types=[]),
                 Token(value='settings', types=['Scalar']),
-                Token(value=': [', types=['Dict', 'List']),
+                Token(value=': [', types=['Mapping', 'Sequence']),
                 Token(value='fast', types=['Scalar']),
                 Token(value=', ', types=[]),
                 Token(value='secure', types=['Scalar']),
                 Token(value=']', types=[])
             ], line_number=3, level=2),
             Line(tokens=[
-                Token(value='    - ', types=['List']),
+                Token(value='    - ', types=['Sequence']),
                 Token(value='srv-200', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=4, level=1),
             Line(tokens=[
                 Token(value='        ', types=[]),
                 Token(value='settings', types=['Scalar']),
-                Token(value=': [', types=['Dict', 'List']),
+                Token(value=': [', types=['Mapping', 'Sequence']),
                 Token(value='reliable', types=['Scalar']),
                 Token(value=', ', types=[]),
                 Token(value='scalable', types=['Scalar']),
@@ -129,20 +129,20 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='        ', types=[]),
                 Token(value='backup_to', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='storageUnit', types=['Scalar'])
             ], line_number=6, level=2),
             Line(tokens=[
-                Token(value='- ', types=['List']),
+                Token(value='- ', types=['Sequence']),
                 Token(value='database', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=7, level=0),
             Line(tokens=[
-                Token(value='    - ', types=['List']),
+                Token(value='    - ', types=['Sequence']),
                 Token(value='srv-300', types=['Scalar'])
             ], line_number=8, level=1),
             Line(tokens=[
-                Token(value='- ', types=['List']),
+                Token(value='- ', types=['Sequence']),
                 Token(value='webApp', types=['Scalar'])
             ], line_number=9, level=0)
         ]
@@ -156,50 +156,50 @@ class TestLexYaml(unittest.TestCase):
         expected = [
             Line(tokens=[
                 Token(value='apiVersion', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='v1', types=['Scalar'])
             ], line_number=1, level=0),
             Line(tokens=[
                 Token(value='kind', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='Pod', types=['Scalar'])
             ], line_number=2, level=0),
             Line(tokens=[
                 Token(value='metadata', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=3, level=0),
             Line(tokens=[
                 Token(value=' ', types=[]),
                 Token(value='name', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='apache-pod', types=['Scalar'])
             ], line_number=4, level=1),
             Line(tokens=[
                 Token(value=' ', types=[]),
                 Token(value='labels', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=5, level=1),
             Line(tokens=[
                 Token(value='   ', types=[]),
                 Token(value='app', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='web', types=['Scalar'])
             ], line_number=6, level=2),
             Line(tokens=[
                 Token(value='   ', types=[]),
                 Token(value='steps', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=7, level=2),
             Line(tokens=[
-                Token(value='     - ', types=['List']),
+                Token(value='     - ', types=['Sequence']),
                 Token(value='uses', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='actions/checkout@v2', types=['Scalar'])
             ], line_number=8, level=3),
             Line(tokens=[
-                Token(value='     - ', types=['List']),
+                Token(value='     - ', types=['Sequence']),
                 Token(value='name', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='Set up Python', types=['Scalar'])
             ], line_number=9, level=3),
             Line(tokens=[
@@ -222,13 +222,13 @@ class TestLexYaml(unittest.TestCase):
             ], line_number=2, level=0),
             Line(tokens=[
                 Token(value='kind', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='Pod', types=['Scalar']),
                 Token(value=' # Comment at line end', types=['Comment']),
             ], line_number=3, level=0),
             Line(tokens=[
                 Token(value='metadata', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=4, level=0),
             Line(tokens=[
                 Token(value='  ', types=[]),
@@ -237,13 +237,13 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='  ', types=[]),
                 Token(value='build', types=['Scalar']),
-                Token(value=': ', types=['Dict']),
+                Token(value=': ', types=['Mapping']),
                 Token(value='"2020-01-01"', types=['Scalar'])
             ], line_number=6, level=1),
             Line(tokens=[
                 Token(value='  ', types=[]),
                 Token(value='resources', types=['Scalar']),
-                Token(value=':', types=['Dict'])
+                Token(value=':', types=['Mapping'])
             ], line_number=7, level=1),
             Line(tokens=[
                 Token(value='    ', types=[]),
@@ -252,7 +252,7 @@ class TestLexYaml(unittest.TestCase):
             Line(tokens=[
                 Token(value='  ', types=[]),
                 Token(value='emptyLabel', types=['Scalar']),
-                Token(value=': {}', types=['Dict', 'Dict'])
+                Token(value=': {}', types=['Mapping', 'Mapping'])
             ], line_number=9, level=1)
         ]
         self.assertEqual(expected, parsed_yaml)

@@ -38,14 +38,14 @@ class Line:
 
 
 class SyntaxNode:
-    def __init__(self, name, line_number, flow_style="", is_sequence=False):
+    def __init__(self, name, line_number, flow_style="", is_block_sequence=False):
         self.name = name
         self.renamed_to = None
         self.start_line_number = line_number
         self.end_line_number = line_number
         self.children = []
         self.flow_style = flow_style
-        self.is_sequence = is_sequence
+        self.is_block_sequence = is_block_sequence
 
     def add_child(self, child):
         self.children.append(child)
@@ -60,7 +60,7 @@ class SyntaxNode:
 
     def deep_copy(self, insert_at_line):
         # This copies the node to a position immediately under its last child
-        copied_node = SyntaxNode(self.name, insert_at_line, self.flow_style, self.is_sequence)
+        copied_node = SyntaxNode(self.name, insert_at_line, self.flow_style, self.is_block_sequence)
         copied_node.renamed_to = self.renamed_to
         for child in self.children:
             child_depth = child.start_line_number - self.start_line_number
@@ -81,6 +81,7 @@ class SyntaxNode:
                     self.end_line_number == other.end_line_number and
                     self.renamed_to == other.renamed_to and
                     self.flow_style == other.flow_style and
+                    self.is_block_sequence == other.is_block_sequence and
                     self.children == other.children)
         return False
 
@@ -90,5 +91,5 @@ class SyntaxNode:
                f"end_line_number='{self.end_line_number}', " \
                f"renamed_to='{self.renamed_to}', " \
                f"flow_style='{self.flow_style}', " \
-               f"is_sequence='{self.is_sequence}', " \
+               f"is_block_sequence='{self.is_block_sequence}', " \
                f"children={self.children})"

@@ -31,7 +31,7 @@ class TestParseYaml(unittest.TestCase):
         srv200.add_child(settings200)
         backup_to = SyntaxNode('backup_to', 5)
         srv200.add_child(backup_to)
-        backup_to.add_child(SyntaxNode('storageUnit', 5))
+        backup_to.add_child(SyntaxNode('storageUnit', 5, is_map_value="True"))
 
         server_config.add_child(srv100)
         server_config.add_child(srv200)

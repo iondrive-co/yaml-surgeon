@@ -121,6 +121,13 @@ class YamlOperation:
                         matching_mapping = False
                     elif token.value == last_selected_node.name:
                         matching_mapping = True
+            elif last_selected_node.is_map_value:
+                tokens = self.lexed_lines[last_selected_node.end_line_number].tokens
+                for i, token in enumerate(tokens):
+                    if token.value == last_selected_node.name:
+                        tokens.insert(i, Token("[", "Sequence"))
+                        tokens.insert(i + 2, Token(", " + arg + "]", "Sequence"))
+                        break
             else:
                 # Insert a new selection at the line after the last selection.
                 # Use the contents from the first line of the selection as a basis, and rename to flag it as changed

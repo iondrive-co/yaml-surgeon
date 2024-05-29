@@ -78,6 +78,19 @@ class TestInsert(unittest.TestCase):
                 - bacon: {egg: spam, ham:} # Hello"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
+    def test_insert_sibling_convert_scalar_to_sequence(self):
+        yaml_content = """
+            - sausage:
+                - bacon: egg"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('egg').insert_sibling('spam').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - sausage:
+                - bacon: [egg, spam]"""
+        self.assertEqual(expected_yaml_content, output_yaml_string)
+
 
 if __name__ == '__main__':
     unittest.main()

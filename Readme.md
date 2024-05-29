@@ -191,6 +191,7 @@ For example `.named('ham').insert_sibling('bacon')` applied to:
     - spam:
         - can: {span: bam}
         - ham: [egg]
+        - fan: ran
 ```
 would result in
 ```
@@ -198,18 +199,28 @@ would result in
         - can: {span: bam}
         - ham: [egg]
         - bacon
+        - fan: ran
 ```
 or `.named('egg').insert_sibling('bacon')` would result in
 ```
     - spam:
         - can: {span: bam}
         - ham: [egg, bacon]
+        - fan: ran
 ```
 or `.named('span').insert_sibling('spam')` would result in
 ```
     - spam:
         - can: {span: bam, spam:}
         - ham: [egg]
+        - fan: ran
+```
+or `.named('ran').insert_sibling('spam')` would result in
+```
+    - spam:
+        - can: {span: bam, spam:}
+        - ham: [egg]
+        - fan: [ran, spam]
 ```
 
 #### rename()

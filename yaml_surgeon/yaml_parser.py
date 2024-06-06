@@ -25,7 +25,7 @@ def parse_line_tokens(lines):
                     break
                 elif token_type == 'Scalar':
                     is_block_sequence = '-' in line.tokens[i - 1].value
-                    is_map_value = ':' in line.tokens[i - 1].value
+                    is_map_value = ':' in line.tokens[i - 1].value and '{' not in line.tokens[i - 1].value
                     node = SyntaxNode(token.value, line_number, line_flow_style, is_block_sequence, is_map_value)
                     # If this line already has a scalar and no nested structures, add this one as a child
                     if line_has_scalar and level == line.level:

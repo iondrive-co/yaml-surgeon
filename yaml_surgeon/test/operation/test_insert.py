@@ -65,7 +65,7 @@ class TestInsert(unittest.TestCase):
                 - bacon: [egg, spam, ham]"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
-    def test_insert_sibling_flow_mapping(self):
+    def test_insert_sibling_flow_map_key(self):
         yaml_content = """
             - sausage:
                 - bacon: {egg: spam} # Hello"""
@@ -76,6 +76,19 @@ class TestInsert(unittest.TestCase):
         expected_yaml_content = """
             - sausage:
                 - bacon: {egg: spam, ham:} # Hello"""
+        self.assertEqual(expected_yaml_content, output_yaml_string)
+
+    def test_insert_sibling_flow_map_value(self):
+        yaml_content = """
+            - sausage:
+                - bacon: {egg: [spam, ham]}"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('ham').insert_sibling('can').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - sausage:
+                - bacon: {egg: [spam, ham, can]}"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
     def test_insert_sibling_convert_scalar_to_sequence(self):
@@ -89,6 +102,19 @@ class TestInsert(unittest.TestCase):
         expected_yaml_content = """
             - sausage:
                 - bacon: [egg, spam]"""
+        self.assertEqual(expected_yaml_content, output_yaml_string)
+
+    def test_insert_sibling_convert_flow_map_value_to_sequence(self):
+        yaml_content = """
+            - sausage:
+                - bacon: {egg: spam}"""
+        lexed_lines = scan_text(yaml_content)
+        parsed_yaml = parse_line_tokens(lexed_lines)
+        output_yaml = YamlOperation(parsed_yaml, lexed_lines).named('spam').insert_sibling('ham').execute()
+        output_yaml_string = "\n".join(output_yaml)
+        expected_yaml_content = """
+            - sausage:
+                - bacon: {egg: [spam, ham]}"""
         self.assertEqual(expected_yaml_content, output_yaml_string)
 
 

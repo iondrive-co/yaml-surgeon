@@ -218,9 +218,16 @@ or `.named('span').insert_sibling('spam')` would result in
 or `.named('ran').insert_sibling('spam')` would result in
 ```
     - spam:
-        - can: {span: bam, spam:}
+        - can: {span: bam}
         - ham: [egg]
         - fan: [ran, spam]
+```
+or `.named('bam').insert_sibling('spam')` would result in
+```
+    - spam:
+        - can: {span: [bam, spam]}
+        - ham: [egg]
+        - fan: ran
 ```
 
 #### rename()
